@@ -1,0 +1,165 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+--IF Car.location = garage THEN Garage Door.open
+
+MODULE DoorRFID
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	doorrfid: DoorRFID;
+	car: Car;
+	garagedoor: GarageDoor;
+	door: Door;
+ASSIGN
+	init(intensity) := 0 + toint(doorrfid.is_attack) + toint(car.is_attack) + toint(garagedoor.is_attack) + toint(door.is_attack);
+
+	next(garagedoor.DoorState) :=
+	case
+		car.location=garage & garagedoor.is_attack=FALSE: open;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized & door.is_attack=FALSE: unlocked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(doorrfid.RFID) :=
+	case
+		doorrfid.is_attack=TRUE: {authorized, notauthorized};
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=3 & door.is_attack=FALSE);

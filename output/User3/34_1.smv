@@ -1,0 +1,212 @@
+--IF Motion Detector.motion = inactive & Door.LockState = unlocked THEN Door.lock
+--IF Motion Detector.motion = inactive & Window.WindowState = open THEN Window.close
+--IF Motion Detector.motion = inactive & Garage Door.DoorState = open THEN Garage Door.close
+
+MODULE MotionDetector
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	motiondetector: MotionDetector;
+	window: Window;
+	garagedoor: GarageDoor;
+	door: Door;
+	a_motion: {active, inactive};
+ASSIGN
+	init(intensity) := 0 + toint(motiondetector.is_attack) + toint(window.is_attack) + toint(garagedoor.is_attack) + toint(door.is_attack);
+
+	next(window.WindowState) :=
+	case
+		motiondetector.motion=inactive & window.WindowState=open & window.is_attack=FALSE: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(garagedoor.DoorState) :=
+	case
+		motiondetector.motion=inactive & garagedoor.DoorState=open & garagedoor.is_attack=FALSE: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		motiondetector.motion=inactive & door.LockState=unlocked & door.is_attack=FALSE: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	motiondetector.motion:=
+	case
+		motiondetector.is_attack=TRUE: {active, inactive};
+		TRUE: a_motion;
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		motiondetector.motion=inactive & window.WindowState=open & (motiondetector.trust_motion=trusted | window.trust_WindowState_open=trusted): trusted;
+		motiondetector.motion=inactive & window.WindowState=open: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		motiondetector.motion=inactive & garagedoor.DoorState=open & (motiondetector.trust_motion=trusted | garagedoor.trust_DoorState_open=trusted): trusted;
+		motiondetector.motion=inactive & garagedoor.DoorState=open: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		motiondetector.motion=inactive & door.LockState=unlocked & (motiondetector.trust_motion=trusted | door.trust_LockState_unlocked=trusted): trusted;
+		motiondetector.motion=inactive & door.LockState=unlocked: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=3 & window.is_attack=FALSE);
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=3 & door.is_attack=FALSE);

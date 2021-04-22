@@ -1,0 +1,198 @@
+--IF Clock.time = 20 THEN Sina Weibo.post
+--IF Clock.time = 19 THEN Sina Weibo.post
+--IF Washer Machine.MachineState = stop THEN Sina Weibo.post
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE WasherMachine
+VAR
+	WasherMode: {heavy, regular, rinse, spinDry};
+	MachineState: {pause, run, stop};
+	regular_a: boolean;
+	heavy_a: boolean;
+	rinse_a: boolean;
+	spinDry_a: boolean;
+	pause_a: boolean;
+	run_a: boolean;
+	stop_a: boolean;
+	washerJobState: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	trust_washerJobState: {untrusted};
+	trust_WasherMode_heavy: {untrusted, trusted};
+	trust_WasherMode_regular: {untrusted, trusted};
+	trust_WasherMode_rinse: {untrusted, trusted};
+	trust_WasherMode_spinDry: {untrusted, trusted};
+	trust_MachineState_pause: {untrusted, trusted};
+	trust_MachineState_run: {untrusted, trusted};
+	trust_MachineState_stop: {untrusted, trusted};
+ASSIGN
+	init(WasherMode) := regular;
+	init(MachineState) := pause;
+	init(regular_a) := FALSE;
+	init(heavy_a) := FALSE;
+	init(rinse_a) := FALSE;
+	init(spinDry_a) := FALSE;
+	init(pause_a) := FALSE;
+	init(run_a) := FALSE;
+	init(stop_a) := FALSE;
+	init(trust_WasherMode_regular) := trusted;
+	init(trust_MachineState_pause) := trusted;
+	init(trust_MachineState_run) := trusted;
+	init(trust_MachineState_stop) := trusted;
+	init(trust_WasherMode_heavy) := trusted;
+	init(trust_WasherMode_rinse) := trusted;
+	init(trust_WasherMode_spinDry) := trusted;
+
+MODULE main
+VAR
+	sinaweibo: SinaWeibo;
+	clock: Clock;
+	washermachine: WasherMachine;
+	a_time: 0..23;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		clock.time=20: posting;
+		clock.time=19: posting;
+		washermachine.MachineState=stop: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(washermachine.WasherMode) :=
+	case
+		washermachine.WasherMode=heavy: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=regular: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=rinse: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=spinDry: {heavy, regular, rinse, spinDry};
+		TRUE: washermachine.WasherMode;
+	esac;
+
+	next(washermachine.MachineState) :=
+	case
+		washermachine.MachineState=pause: {pause, run, stop};
+		washermachine.MachineState=run: {pause, run, stop};
+		washermachine.MachineState=stop: {pause, run, stop};
+		TRUE: washermachine.MachineState;
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	clock.time := a_time;
+
+	next(washermachine.washerJobState) :=
+	case
+		TRUE: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.regular_a) :=
+	case
+		washermachine.WasherMode!=regular & next(washermachine.WasherMode)=regular: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.heavy_a) :=
+	case
+		washermachine.WasherMode!=heavy & next(washermachine.WasherMode)=heavy: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.rinse_a) :=
+	case
+		washermachine.WasherMode!=rinse & next(washermachine.WasherMode)=rinse: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.spinDry_a) :=
+	case
+		washermachine.WasherMode!=spinDry & next(washermachine.WasherMode)=spinDry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.pause_a) :=
+	case
+		washermachine.MachineState!=pause & next(washermachine.MachineState)=pause: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.run_a) :=
+	case
+		washermachine.MachineState!=run & next(washermachine.MachineState)=run: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.stop_a) :=
+	case
+		washermachine.MachineState!=stop & next(washermachine.MachineState)=stop: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		washermachine.MachineState=stop & (washermachine.trust_MachineState_stop=trusted): trusted;
+		washermachine.MachineState=stop: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(washermachine.trust_WasherMode_heavy) := washermachine.trust_WasherMode_heavy;
+
+	next(washermachine.trust_WasherMode_regular) := washermachine.trust_WasherMode_regular;
+
+	next(washermachine.trust_WasherMode_rinse) := washermachine.trust_WasherMode_rinse;
+
+	next(washermachine.trust_WasherMode_spinDry) := washermachine.trust_WasherMode_spinDry;
+
+	next(washermachine.trust_MachineState_pause) := washermachine.trust_MachineState_pause;
+
+	next(washermachine.trust_MachineState_run) := washermachine.trust_MachineState_run;
+
+	next(washermachine.trust_MachineState_stop) := washermachine.trust_MachineState_stop;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

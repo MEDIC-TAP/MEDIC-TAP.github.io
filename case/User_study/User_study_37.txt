@@ -1,0 +1,7 @@
+IF Humidity Sensor.humidity > 60 THEN Humidifier.off
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Air Quality Monitor.airQuality > 70 THEN Window.close
+IF Weather.weather = rainy THEN Window.close
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Temperature Sensor.temperature < 8 THEN Air Conditioner.heat
+IF Smoke Sensor.smoke = detected THEN Ventilator.on

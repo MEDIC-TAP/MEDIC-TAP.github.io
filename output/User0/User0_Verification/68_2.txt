@@ -1,0 +1,31 @@
+-- specification AG !(waterheater.MachineState = on & waterheater.trust_MachineState_on = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  motiondetector.trust_motion = trusted
+  motiondetector.motion = inactive
+  waterheater.MachineState = on
+  waterheater.on_a = FALSE
+  waterheater.off_a = FALSE
+  waterheater.waterTemperature = 0
+  waterheater.waterTemperature_rate = -1
+  waterheater.trust_MachineState_off = trusted
+  waterheater.trust_MachineState_on = trusted
+  a_motion = inactive
+  waterheater.trust_waterTemperature = untrusted
+-> State: 1.2 <-
+  motiondetector.motion = active
+  waterheater.MachineState = off
+  waterheater.off_a = TRUE
+  waterheater.waterTemperature_rate = 1
+  waterheater.trust_MachineState_on = untrusted
+  a_motion = active
+-> State: 1.3 <-
+  motiondetector.motion = inactive
+  waterheater.MachineState = on
+  waterheater.on_a = TRUE
+  waterheater.off_a = FALSE
+  waterheater.waterTemperature = 1
+  waterheater.waterTemperature_rate = 0
+  a_motion = inactive

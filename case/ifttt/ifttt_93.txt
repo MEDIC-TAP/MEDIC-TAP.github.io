@@ -1,0 +1,13 @@
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Sina Weibo.State = posting THEN Air Conditioner.fanOnly
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money
+IF Sina Weibo.State = posting THEN Air Conditioner.off
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Weather.weather = windy THEN Alarm.both
+IF Email.receiveMail = receive THEN Sina Weibo.post
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on
+IF Calendar.date = MothersDay THEN Light.off
+IF Smoke Sensor.smoke = detected THEN Light.on

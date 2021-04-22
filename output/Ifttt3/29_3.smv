@@ -1,0 +1,273 @@
+--IF Weather.weather = windy THEN Sina Weibo.post
+--IF Clock.time = 20 THEN Washer Machine.run
+--IF Washer Machine.MachineState = stop THEN Sina Weibo.post
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE WasherMachine
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WasherMode: {heavy, regular, rinse, spinDry};
+	MachineState: {pause, run, stop};
+	regular_a: boolean;
+	heavy_a: boolean;
+	rinse_a: boolean;
+	spinDry_a: boolean;
+	pause_a: boolean;
+	run_a: boolean;
+	stop_a: boolean;
+	washerJobState: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	trust_washerJobState: {untrusted};
+	trust_WasherMode_heavy: {untrusted, trusted};
+	trust_WasherMode_regular: {untrusted, trusted};
+	trust_WasherMode_rinse: {untrusted, trusted};
+	trust_WasherMode_spinDry: {untrusted, trusted};
+	trust_MachineState_pause: {untrusted, trusted};
+	trust_MachineState_run: {untrusted, trusted};
+	trust_MachineState_stop: {untrusted, trusted};
+ASSIGN
+	init(WasherMode) := regular;
+	init(MachineState) := pause;
+	init(regular_a) := FALSE;
+	init(heavy_a) := FALSE;
+	init(rinse_a) := FALSE;
+	init(spinDry_a) := FALSE;
+	init(pause_a) := FALSE;
+	init(run_a) := FALSE;
+	init(stop_a) := FALSE;
+	init(trust_WasherMode_regular) := trusted;
+	init(trust_MachineState_pause) := trusted;
+	init(trust_MachineState_run) := trusted;
+	init(trust_MachineState_stop) := trusted;
+	init(trust_WasherMode_heavy) := trusted;
+	init(trust_WasherMode_rinse) := trusted;
+	init(trust_WasherMode_spinDry) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	clock: Clock;
+	washermachine: WasherMachine;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(sinaweibo.is_attack) + toint(clock.is_attack) + toint(washermachine.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		weather.weather=windy & sinaweibo.is_attack=FALSE: posting;
+		washermachine.MachineState=stop & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(washermachine.WasherMode) :=
+	case
+		washermachine.WasherMode=heavy: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=regular: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=rinse: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=spinDry: {heavy, regular, rinse, spinDry};
+		TRUE: washermachine.WasherMode;
+	esac;
+
+	next(washermachine.MachineState) :=
+	case
+		clock.time=20 & washermachine.is_attack=FALSE: run;
+		washermachine.MachineState=pause: {pause, run, stop};
+		washermachine.MachineState=run: {pause, run, stop};
+		washermachine.MachineState=stop: {pause, run, stop};
+		TRUE: washermachine.MachineState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(washermachine.washerJobState) :=
+	case
+		TRUE: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.regular_a) :=
+	case
+		washermachine.WasherMode!=regular & next(washermachine.WasherMode)=regular: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.heavy_a) :=
+	case
+		washermachine.WasherMode!=heavy & next(washermachine.WasherMode)=heavy: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.rinse_a) :=
+	case
+		washermachine.WasherMode!=rinse & next(washermachine.WasherMode)=rinse: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.spinDry_a) :=
+	case
+		washermachine.WasherMode!=spinDry & next(washermachine.WasherMode)=spinDry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.pause_a) :=
+	case
+		washermachine.MachineState!=pause & next(washermachine.MachineState)=pause: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.run_a) :=
+	case
+		washermachine.MachineState!=run & next(washermachine.MachineState)=run: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.stop_a) :=
+	case
+		washermachine.MachineState!=stop & next(washermachine.MachineState)=stop: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		washermachine.MachineState=stop & (washermachine.trust_MachineState_stop=trusted): trusted;
+		washermachine.MachineState=stop: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(washermachine.trust_WasherMode_regular) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_WasherMode_regular;
+	esac;
+
+	next(washermachine.trust_MachineState_pause) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_MachineState_pause;
+	esac;
+
+	next(washermachine.trust_MachineState_run) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: washermachine.trust_MachineState_run;
+	esac;
+
+	next(washermachine.trust_MachineState_stop) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_MachineState_stop;
+	esac;
+
+	next(washermachine.trust_WasherMode_heavy) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_WasherMode_heavy;
+	esac;
+
+	next(washermachine.trust_WasherMode_rinse) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_WasherMode_rinse;
+	esac;
+
+	next(washermachine.trust_WasherMode_spinDry) :=
+	case
+		washermachine.is_attack=TRUE: untrusted;
+		TRUE: washermachine.trust_WasherMode_spinDry;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=3 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=3);

@@ -1,0 +1,20 @@
+IF Motion Detector.motion = active THEN Door.lock
+IF Dryer.MachineState = stop THEN Email.send mail
+IF Clock.time = 20 THEN Washer Machine.run
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Sina Weibo.State = posting THEN Air Purifier.on
+IF Home Mode.Mode = home THEN Light.on
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Clock.time = 20 THEN Oven.paused
+IF Email.receiveMail = receive THEN Email.send mail
+IF Online Bank.State = transfering THEN Sina Weibo.post
+IF Home Mode.Mode = home THEN Camera.off
+IF Light.SwitchState = on THEN Light.off
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Calendar.date = weekend THEN Camera.on
+IF Motion Detector.motion = active THEN Email.send mail
+IF Door.LockState = locked THEN Light.off
+IF Mobile Phone.location = home THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close
+IF Air Quality Monitor.carbonDioxide > 70 THEN Email.send mail

@@ -1,0 +1,175 @@
+--IF Email.receiveMail = receive THEN Online Bank.transfer money
+--IF Weather.weather = windy THEN Email.send mail
+--IF Calendar.date = weekdays THEN Email.send mail
+--IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE Email
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE Calendar
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):= trusted;
+	init(trust_season):= trusted;
+
+MODULE OnlineBank
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	temperaturesensor: TemperatureSensor;
+	email: Email;
+	calendar: Calendar;
+	onlinebank: OnlineBank;
+	a_date: {weekdays, weekend, MothersDay};
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_season: {spring, summer, autumn, winter};
+ASSIGN
+	next(email.State) :=
+	case
+		weather.weather=windy: sending;
+		calendar.date=weekdays: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		email.receiveMail=receive: transfering;
+		temperaturesensor.temperature>30: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	weather.weather := a_weather;
+
+	temperaturesensor.temperature := a_temperature;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	calendar.date := a_date;
+
+	calendar.season := a_season;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		calendar.date=weekdays & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekdays: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		email.receiveMail=receive & (email.trust_receiveMail=trusted): trusted;
+		email.receiveMail=receive: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted);

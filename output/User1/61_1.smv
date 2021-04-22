@@ -1,0 +1,237 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+--IF Weather.weather = windy THEN Window.close
+--IF Weather.weather = rainy THEN Window.close
+--IF Weather.weather = snowy THEN Window.close
+--IF Air Quality Monitor.airQuality > 20 THEN Window.close
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE DoorRFID
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	window: Window;
+	doorrfid: DoorRFID;
+	airqualitymonitor: AirQualityMonitor;
+	door: Door;
+	a_airQuality: 0..100;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_carbonDioxide: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(window.is_attack) + toint(doorrfid.is_attack) + toint(airqualitymonitor.is_attack) + toint(door.is_attack);
+
+	next(window.WindowState) :=
+	case
+		weather.weather=windy & window.is_attack=FALSE: closed;
+		weather.weather=rainy & window.is_attack=FALSE: closed;
+		weather.weather=snowy & window.is_attack=FALSE: closed;
+		airqualitymonitor.airQuality>20 & window.is_attack=FALSE: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized & door.is_attack=FALSE: unlocked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	next(doorrfid.RFID) :=
+	case
+		doorrfid.is_attack=TRUE: {authorized, notauthorized};
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		weather.weather=snowy & (weather.trust_weather=trusted): trusted;
+		weather.weather=snowy: untrusted;
+		airqualitymonitor.airQuality>20 & (airqualitymonitor.trust_airQuality=trusted): trusted;
+		airqualitymonitor.airQuality>20: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=1 & door.is_attack=FALSE);

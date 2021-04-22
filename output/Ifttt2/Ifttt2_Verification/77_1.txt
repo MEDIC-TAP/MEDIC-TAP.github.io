@@ -1,0 +1,37 @@
+-- specification AG !(((garagedoor.DoorState = open & garagedoor.trust_DoorState_open = untrusted) & intensity <= 2) & garagedoor.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  car.is_attack = TRUE
+  car.trust_location = untrusted
+  garagedoor.is_attack = FALSE
+  homemode.is_attack = FALSE
+  car.location = garage
+  garagedoor.DoorState = closed
+  garagedoor.close_a = FALSE
+  garagedoor.open_a = FALSE
+  garagedoor.contact = closed
+  garagedoor.trust_DoorState_closed = trusted
+  garagedoor.trust_DoorState_open = trusted
+  homemode.Mode = home
+  homemode.State = idle
+  homemode.sethomemode_a = FALSE
+  homemode.setawaymode_a = FALSE
+  homemode.setsleepmode_a = FALSE
+  homemode.sendalertmessage_a = FALSE
+  homemode.sendphoto_a = FALSE
+  homemode.trust_Mode_away = trusted
+  homemode.trust_Mode_home = trusted
+  homemode.trust_Mode_sleep = trusted
+  homemode.trust_State_idle = trusted
+  homemode.trust_State_sendingAlertMessage = trusted
+  homemode.trust_State_sendingPhoto = trusted
+  garagedoor.trust_contact = trusted
+-> State: 1.2 <-
+  garagedoor.DoorState = open
+  garagedoor.open_a = TRUE
+  garagedoor.trust_DoorState_open = untrusted
+  homemode.State = sendingAlertMessage
+  homemode.sendalertmessage_a = TRUE

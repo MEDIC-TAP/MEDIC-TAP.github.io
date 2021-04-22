@@ -1,0 +1,108 @@
+--IF Weather.weather = windy THEN Window.close
+--IF Weather.weather = sunny THEN Window.open
+--IF Gas Sensor.gas > 20 THEN Window.open
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE Window
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE GasSensor
+FROZENVAR
+	trust_gas: {untrusted, trusted};
+VAR
+	gas: 0..100;
+ASSIGN
+	init(trust_gas):= untrusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	window: Window;
+	gassensor: GasSensor;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_gas: 0..100;
+ASSIGN
+	next(window.WindowState) :=
+	case
+		weather.weather=windy: closed;
+		weather.weather=sunny: open;
+		gassensor.gas>20: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_gas) :=
+	case
+		a_gas=100: {toint(a_gas)-1, a_gas};
+		a_gas>100: {100};
+		a_gas=0: {a_gas, a_gas+1};
+		a_gas<0: {0};
+		TRUE: {a_gas+-1, a_gas, a_gas+1};
+	esac;
+
+	weather.weather := a_weather;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	gassensor.gas := a_gas;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		weather.weather=sunny & (weather.trust_weather=trusted): trusted;
+		weather.weather=sunny: untrusted;
+		gassensor.gas>20 & (gassensor.trust_gas=trusted): trusted;
+		gassensor.gas>20: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted);

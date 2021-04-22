@@ -1,0 +1,79 @@
+--IF Weather.weather = windy THEN Garage Door.close
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE GarageDoor
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	garagedoor: GarageDoor;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	next(garagedoor.DoorState) :=
+	case
+		weather.weather=windy: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	weather.weather := a_weather;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted);

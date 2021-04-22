@@ -1,0 +1,15 @@
+IF Weather.weather = windy THEN Garage Door.close
+IF Clock.time = 19 THEN Email.send mail
+IF Sina Weibo.State = posting THEN Air Conditioner.off
+IF Calendar.date = weekdays THEN Email.send mail
+IF Motion Detector.motion = active THEN Alarm.both
+IF Clock.time = 6 THEN Light.off
+IF Clock.time = 6 THEN Light.on
+IF Home Mode.Mode = home THEN Online Bank.transfer money
+IF Online Bank.State = transfering THEN Sina Weibo.post
+IF Calendar.date = MothersDay THEN Light.off
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Online Bank.transfer money
+IF Clock.time = 20 THEN Water Heater.off
+IF Home Mode.Mode = away THEN Camera.on
+IF Door.LockState = unlocked THEN Email.send mail

@@ -1,0 +1,152 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+--IF Door.LockState = unlocked THEN Water Heater.on
+
+MODULE WaterHeater
+FROZENVAR
+	is_attack: boolean;
+VAR
+	MachineState: {off, on};
+	on_a: boolean;
+	off_a: boolean;
+	waterTemperature: 0..100;
+	waterTemperature_rate: -1..1;
+	trust_waterTemperature: {untrusted};
+	trust_MachineState_off: {untrusted, trusted};
+	trust_MachineState_on: {untrusted, trusted};
+ASSIGN
+	init(MachineState) := on;
+	init(on_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_MachineState_off) := trusted;
+	init(trust_MachineState_on) := trusted;
+
+MODULE DoorRFID
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	waterheater: WaterHeater;
+	doorrfid: DoorRFID;
+	door: Door;
+ASSIGN
+	init(intensity) := 0 + toint(waterheater.is_attack) + toint(doorrfid.is_attack) + toint(door.is_attack);
+
+	next(waterheater.MachineState) :=
+	case
+		door.LockState=unlocked & waterheater.is_attack=FALSE: on;
+		waterheater.MachineState=off: {off, on};
+		waterheater.MachineState=on: {off, on};
+		TRUE: waterheater.MachineState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized & door.is_attack=FALSE: unlocked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(waterheater.waterTemperature) :=
+	case
+		waterheater.waterTemperature=100-(waterheater.waterTemperature_rate): {toint(waterheater.waterTemperature)-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature>100-(waterheater.waterTemperature_rate): {100};
+		waterheater.waterTemperature=0-(waterheater.waterTemperature_rate): {waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature<0-(waterheater.waterTemperature_rate): {0};
+		TRUE: {waterheater.waterTemperature+-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+	esac;
+
+	next(doorrfid.RFID) :=
+	case
+		doorrfid.is_attack=TRUE: {authorized, notauthorized};
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	next(waterheater.waterTemperature_rate) :=
+	case
+		waterheater.MachineState=on: 1;
+		TRUE: 0;
+	esac;
+
+	next(waterheater.on_a) :=
+	case
+		waterheater.MachineState!=on & next(waterheater.MachineState)=on: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.off_a) :=
+	case
+		waterheater.MachineState!=off & next(waterheater.MachineState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.trust_MachineState_off) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		TRUE: waterheater.trust_MachineState_off;
+	esac;
+
+	next(waterheater.trust_MachineState_on) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		door.LockState=unlocked & (door.trust_LockState_unlocked=trusted): trusted;
+		door.LockState=unlocked: untrusted;
+		TRUE: waterheater.trust_MachineState_on;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(waterheater.MachineState=on & waterheater.trust_MachineState_on=untrusted & intensity<=3 & waterheater.is_attack=FALSE);

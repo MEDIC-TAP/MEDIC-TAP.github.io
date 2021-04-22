@@ -1,0 +1,67 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+
+MODULE DoorRFID
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):= trusted;
+
+MODULE Door
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+VAR
+	doorrfid: DoorRFID;
+	door: Door;
+ASSIGN
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized: unlocked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(doorrfid.RFID) :=
+	case
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted);

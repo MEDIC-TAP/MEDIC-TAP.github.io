@@ -1,0 +1,28 @@
+-- specification AG !(((onlinebank.State = transfering & onlinebank.trust_State_transfering = untrusted) & intensity <= 2) & onlinebank.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  airqualitymonitor.is_attack = TRUE
+  airqualitymonitor.trust_airQuality = untrusted
+  airqualitymonitor.trust_carbonDioxide = untrusted
+  onlinebank.is_attack = FALSE
+  airqualitymonitor.airQuality = 0
+  airqualitymonitor.carbonDioxide = 0
+  onlinebank.State = idle
+  onlinebank.transfermoney_a = FALSE
+  onlinebank.trust_State_idle = trusted
+  onlinebank.trust_State_transfering = trusted
+  a_airQuality = 0
+  a_carbonDioxide = 0
+-> State: 1.2 <-
+  airqualitymonitor.airQuality = 71
+  onlinebank.State = transfering
+  onlinebank.transfermoney_a = TRUE
+-> State: 1.3 <-
+  airqualitymonitor.airQuality = 0
+  onlinebank.transfermoney_a = FALSE
+  onlinebank.trust_State_transfering = untrusted
+  a_airQuality = 1
+  a_carbonDioxide = 1

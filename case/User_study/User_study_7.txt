@@ -1,0 +1,5 @@
+IF Electricity Meter Sensor.energy > 80 THEN Online Bank.transfer money
+IF Weather.weather = sunny & Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Weather.weather = sunny THEN Light.off
+IF Home Mode.Mode = away THEN TV.off
+IF Motion Detector.motion = inactive THEN Home Mode.set away mode

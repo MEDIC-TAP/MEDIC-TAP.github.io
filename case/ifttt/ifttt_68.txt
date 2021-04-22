@@ -1,0 +1,11 @@
+IF Clock.time = 20 THEN Door.lock
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Car.location = garage THEN Garage Door.open
+IF Door.LockState = locked THEN Light.off
+IF Clock.time = 19 THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+IF Home Mode.Mode = away THEN Humidifier.on
+IF Motion Detector.motion = active THEN Sprinkler Controller.close
+IF Calendar.date = weekend THEN Air Conditioner.off
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close

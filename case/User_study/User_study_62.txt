@@ -1,0 +1,10 @@
+IF Weather.weather = windy THEN Window.close
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Motion Detector.motion = active THEN TV.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Air Conditioner.cool THEN Window.close
+IF Air Conditioner.heat THEN Window.close
+IF Motion Detector.motion = active THEN Light.on

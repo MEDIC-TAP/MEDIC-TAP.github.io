@@ -1,0 +1,12 @@
+IF Weather.weather = windy THEN Alarm.both
+IF Motion Detector.motion = active THEN Light.off
+IF Alarm.AlertState = both THEN Camera.take photo
+IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Clock.time = 20 THEN Email.send mail
+IF Motion Detector.motion = active THEN Alarm.off
+IF Clock.time = 20 THEN Light.on
+IF Clock.time = 19 THEN Email.send mail
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Clock.time = 20 THEN Light.off

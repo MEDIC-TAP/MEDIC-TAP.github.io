@@ -1,0 +1,368 @@
+--IF Air Conditioner.HvacMode = cool THEN Email.send mail
+--IF Email.State = sending THEN Sina Weibo.post
+--IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+--IF Weather.weather = windy THEN Email.send mail
+--IF Temperature Sensor.temperature > 30 THEN Email.send mail
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Email
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE AirConditioner
+FROZENVAR
+	is_attack: boolean;
+VAR
+	HvacMode: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+	auto_a: boolean;
+	cool_a: boolean;
+	dry_a: boolean;
+	coolClean_a: boolean;
+	dryClean_a: boolean;
+	fanOnly_a: boolean;
+	heat_a: boolean;
+	heatClean_a: boolean;
+	off_a: boolean;
+	temperature_rate: -1..1;
+	humidity_rate: -1..1;
+	trust_HvacMode_auto: {untrusted, trusted};
+	trust_HvacMode_cool: {untrusted, trusted};
+	trust_HvacMode_coolClean: {untrusted, trusted};
+	trust_HvacMode_dry: {untrusted, trusted};
+	trust_HvacMode_dryClean: {untrusted, trusted};
+	trust_HvacMode_fanOnly: {untrusted, trusted};
+	trust_HvacMode_heat: {untrusted, trusted};
+	trust_HvacMode_heatClean: {untrusted, trusted};
+	trust_HvacMode_off: {untrusted, trusted};
+ASSIGN
+	init(HvacMode) := auto;
+	init(auto_a) := FALSE;
+	init(cool_a) := FALSE;
+	init(dry_a) := FALSE;
+	init(coolClean_a) := FALSE;
+	init(dryClean_a) := FALSE;
+	init(fanOnly_a) := FALSE;
+	init(heat_a) := FALSE;
+	init(heatClean_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_HvacMode_auto) := trusted;
+	init(trust_HvacMode_cool) := trusted;
+	init(trust_HvacMode_dry) := trusted;
+	init(trust_HvacMode_coolClean) := trusted;
+	init(trust_HvacMode_dryClean) := trusted;
+	init(trust_HvacMode_fanOnly) := trusted;
+	init(trust_HvacMode_heat) := trusted;
+	init(trust_HvacMode_heatClean) := trusted;
+	init(trust_HvacMode_off) := trusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	temperaturesensor: TemperatureSensor;
+	email: Email;
+	airconditioner: AirConditioner;
+	smokesensor: SmokeSensor;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_smoke: {clear, detected, tested};
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(sinaweibo.is_attack) + toint(temperaturesensor.is_attack) + toint(email.is_attack) + toint(airconditioner.is_attack) + toint(smokesensor.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		email.State=sending & sinaweibo.is_attack=FALSE: posting;
+		smokesensor.smoke=detected & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		airconditioner.HvacMode=cool & email.is_attack=FALSE: sending;
+		weather.weather=windy & email.is_attack=FALSE: sending;
+		temperaturesensor.temperature>30 & email.is_attack=FALSE: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(airconditioner.HvacMode) :=
+	case
+		airconditioner.HvacMode=auto: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=cool: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=coolClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dry: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dryClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=fanOnly: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heat: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heatClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=off: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		TRUE: airconditioner.HvacMode;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100-(airconditioner.temperature_rate): {toint(a_temperature)-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate};
+		a_temperature>100-(airconditioner.temperature_rate): {100};
+		a_temperature=0-(airconditioner.temperature_rate): {a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+		a_temperature<0-(airconditioner.temperature_rate): {0};
+		TRUE: {a_temperature+-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	smokesensor.smoke:=
+	case
+		smokesensor.is_attack=TRUE: {clear, detected, tested};
+		TRUE: a_smoke;
+	esac;
+
+	next(airconditioner.temperature_rate) :=
+	case
+		airconditioner.HvacMode=cool: -1;
+		airconditioner.HvacMode=coolClean: -1;
+		airconditioner.HvacMode=heat: 1;
+		airconditioner.HvacMode=heatClean: 1;
+		TRUE: 0;
+	esac;
+
+	next(airconditioner.humidity_rate) :=
+	case
+		airconditioner.HvacMode=dry: -1;
+		airconditioner.HvacMode=dryClean: -1;
+		airconditioner.HvacMode=heat: -1;
+		TRUE: 0;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.auto_a) :=
+	case
+		airconditioner.HvacMode!=auto & next(airconditioner.HvacMode)=auto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.cool_a) :=
+	case
+		airconditioner.HvacMode!=cool & next(airconditioner.HvacMode)=cool: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dry_a) :=
+	case
+		airconditioner.HvacMode!=dry & next(airconditioner.HvacMode)=dry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.coolClean_a) :=
+	case
+		airconditioner.HvacMode!=coolClean & next(airconditioner.HvacMode)=coolClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dryClean_a) :=
+	case
+		airconditioner.HvacMode!=dryClean & next(airconditioner.HvacMode)=dryClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.fanOnly_a) :=
+	case
+		airconditioner.HvacMode!=fanOnly & next(airconditioner.HvacMode)=fanOnly: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heat_a) :=
+	case
+		airconditioner.HvacMode!=heat & next(airconditioner.HvacMode)=heat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heatClean_a) :=
+	case
+		airconditioner.HvacMode!=heatClean & next(airconditioner.HvacMode)=heatClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.off_a) :=
+	case
+		airconditioner.HvacMode!=off & next(airconditioner.HvacMode)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		airconditioner.HvacMode=cool & (airconditioner.trust_HvacMode_cool=trusted): trusted;
+		airconditioner.HvacMode=cool: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(airconditioner.trust_HvacMode_auto) := airconditioner.trust_HvacMode_auto;
+
+	next(airconditioner.trust_HvacMode_cool) := airconditioner.trust_HvacMode_cool;
+
+	next(airconditioner.trust_HvacMode_coolClean) := airconditioner.trust_HvacMode_coolClean;
+
+	next(airconditioner.trust_HvacMode_dry) := airconditioner.trust_HvacMode_dry;
+
+	next(airconditioner.trust_HvacMode_dryClean) := airconditioner.trust_HvacMode_dryClean;
+
+	next(airconditioner.trust_HvacMode_fanOnly) := airconditioner.trust_HvacMode_fanOnly;
+
+	next(airconditioner.trust_HvacMode_heat) := airconditioner.trust_HvacMode_heat;
+
+	next(airconditioner.trust_HvacMode_heatClean) := airconditioner.trust_HvacMode_heatClean;
+
+	next(airconditioner.trust_HvacMode_off) := airconditioner.trust_HvacMode_off;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=2 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=2);

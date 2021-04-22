@@ -1,0 +1,9 @@
+IF Weather.weather = rainy THEN Window.close
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Temperature Sensor.temperature < 26 THEN Air Conditioner.off
+IF Temperature Sensor.temperature > 10 THEN Air Conditioner.off
+IF Gas Sensor.gas > 60 THEN Alarm.both
+IF Gas Sensor.gas > 60 THEN Window.open
+IF Door RFID.RFID != authorized THEN Camera.take photo
+IF Camera.take photo THEN Home Mode.send photo
+IF Swimming Pool Water Quality Sensor.waterQuality < 30 THEN Swimming Pool Water Pump.on

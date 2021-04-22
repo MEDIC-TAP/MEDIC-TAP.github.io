@@ -1,0 +1,101 @@
+--IF Temperature Sensor.temperature > 38 THEN Window.close
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	window: Window;
+	temperaturesensor: TemperatureSensor;
+	a_temperature: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(window.is_attack) + toint(temperaturesensor.is_attack);
+
+	next(window.WindowState) :=
+	case
+		temperaturesensor.temperature>38 & window.is_attack=FALSE: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		temperaturesensor.temperature>38 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>38: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);

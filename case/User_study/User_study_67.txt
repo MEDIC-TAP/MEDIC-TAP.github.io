@@ -1,0 +1,10 @@
+IF Humidity Sensor.humidity > 20 & Motion Detector.motion = active & Weather.weather = sunny THEN Window.open
+IF Illuminance Sensor.illuminance < 10 & Motion Detector.motion = active THEN Light.on
+IF Illuminance Sensor.illuminance > 20 THEN Light.off
+IF Door.LockState = unlocked THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 13 THEN Air Conditioner.heat
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Swimming Pool Water Quality Sensor.waterQuality > 20 THEN Swimming Pool Water Pump.on

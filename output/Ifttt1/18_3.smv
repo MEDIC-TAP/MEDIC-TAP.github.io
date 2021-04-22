@@ -1,0 +1,340 @@
+--IF Email.State = sending THEN Sina Weibo.post
+--IF Weather.weather = windy THEN Sina Weibo.post
+--IF Clock.time = 20 THEN Email.send mail
+--IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+--IF Clock.time = 6 THEN Sina Weibo.post
+--IF Weather.weather = windy THEN Email.send mail
+--IF Temperature Sensor.temperature > 30 THEN Email.send mail
+--IF Clock.time = 6 THEN Email.send mail
+--IF Calendar.date = weekend THEN Sina Weibo.post
+--IF Calendar.date = MothersDay THEN Email.send mail
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Email
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Calendar
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_season):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	temperaturesensor: TemperatureSensor;
+	email: Email;
+	airqualitymonitor: AirQualityMonitor;
+	calendar: Calendar;
+	clock: Clock;
+	a_date: {weekdays, weekend, MothersDay};
+	a_airQuality: 0..100;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_carbonDioxide: 0..100;
+	a_season: {spring, summer, autumn, winter};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(sinaweibo.is_attack) + toint(temperaturesensor.is_attack) + toint(email.is_attack) + toint(airqualitymonitor.is_attack) + toint(calendar.is_attack) + toint(clock.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		email.State=sending & sinaweibo.is_attack=FALSE: posting;
+		weather.weather=windy & sinaweibo.is_attack=FALSE: posting;
+		airqualitymonitor.carbonDioxide>70 & sinaweibo.is_attack=FALSE: posting;
+		clock.time=6 & sinaweibo.is_attack=FALSE: posting;
+		calendar.date=weekend & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		clock.time=20 & email.is_attack=FALSE: sending;
+		weather.weather=windy & email.is_attack=FALSE: sending;
+		temperaturesensor.temperature>30 & email.is_attack=FALSE: sending;
+		clock.time=6 & email.is_attack=FALSE: sending;
+		calendar.date=MothersDay & email.is_attack=FALSE: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	calendar.date:=
+	case
+		calendar.is_attack=TRUE: {weekdays, weekend, MothersDay};
+		TRUE: a_date;
+	esac;
+
+	calendar.season:=
+	case
+		calendar.is_attack=TRUE: {spring, summer, autumn, winter};
+		TRUE: a_season;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		airqualitymonitor.carbonDioxide>70 & (airqualitymonitor.trust_carbonDioxide=trusted): trusted;
+		airqualitymonitor.carbonDioxide>70: untrusted;
+		clock.time=6 & (clock.trust_time=trusted): trusted;
+		clock.time=6: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		clock.time=6 & (clock.trust_time=trusted): trusted;
+		clock.time=6: untrusted;
+		calendar.date=MothersDay & (calendar.trust_date=trusted): trusted;
+		calendar.date=MothersDay: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=1 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=1);

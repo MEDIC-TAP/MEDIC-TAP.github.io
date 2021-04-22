@@ -1,0 +1,19 @@
+IF Home Mode.Mode = away THEN Camera.on
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Door.LockState = unlocked THEN Light.on
+IF Clock.time = 20 THEN Water Heater.on
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.auto
+IF Motion Detector.motion = active THEN Alarm.off
+IF Home Mode.Mode = away THEN Humidifier.on
+IF Door.LockState = locked THEN Light.on
+IF Temperature Sensor.temperature < 10 THEN Light.off
+IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Clock.time = 20 THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Camera.on
+IF Weather.weather = rainy THEN Email.send mail
+IF Clock.time = 6 THEN Email.send mail
+IF Smoke Sensor.smoke = detected THEN Email.send mail

@@ -1,0 +1,11 @@
+IF Water Heater.MachineState = off THEN Light.off
+IF Clock.time = 6 THEN Light.off
+IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+IF Calendar.date = MothersDay THEN Light.on
+IF Email.State = sending THEN Email.send mail
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Clock.time = 20 THEN Light.on
+IF Alarm.AlertState = both THEN Light.on
+IF Weather.weather = windy THEN Sina Weibo.post
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Weather.weather = windy THEN Sprinkler Controller.close

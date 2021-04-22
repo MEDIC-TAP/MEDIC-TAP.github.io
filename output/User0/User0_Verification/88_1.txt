@@ -1,0 +1,34 @@
+-- specification AG !(window.WindowState = open & window.trust_WindowState_open = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  weather.trust_weather = untrusted
+  doorrfid.trust_RFID = trusted
+  weather.weather = cloudy
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  doorrfid.RFID = authorized
+  door.LockState = locked
+  door.lock_a = FALSE
+  door.unlock_a = FALSE
+  door.trust_LockState_locked = trusted
+  door.trust_LockState_unlocked = trusted
+  a_weather = cloudy
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  weather.weather = sunny
+  door.LockState = unlocked
+  door.unlock_a = TRUE
+  a_weather = sunny
+-> State: 1.3 <-
+  weather.weather = cloudy
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted
+  door.unlock_a = FALSE
+  a_weather = cloudy

@@ -1,0 +1,179 @@
+--IF Email.State = sending THEN Sina Weibo.post
+--IF Weather.weather = rainy THEN Sina Weibo.post
+--IF Email.receiveMail = receive THEN Sina Weibo.post
+--IF Calendar.date = MothersDay THEN Sina Weibo.post
+--IF Clock.time = 19 THEN Sina Weibo.post
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Email
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE Calendar
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):= trusted;
+	init(trust_season):= trusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	email: Email;
+	calendar: Calendar;
+	clock: Clock;
+	a_date: {weekdays, weekend, MothersDay};
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_season: {spring, summer, autumn, winter};
+	a_time: 0..23;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		email.State=sending: posting;
+		weather.weather=rainy: posting;
+		email.receiveMail=receive: posting;
+		calendar.date=MothersDay: posting;
+		clock.time=19: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	weather.weather := a_weather;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	calendar.date := a_date;
+
+	calendar.season := a_season;
+
+	clock.time := a_time;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		email.receiveMail=receive & (email.trust_receiveMail=trusted): trusted;
+		email.receiveMail=receive: untrusted;
+		calendar.date=MothersDay & (calendar.trust_date=trusted): trusted;
+		calendar.date=MothersDay: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) := email.trust_State_idle;
+
+	next(email.trust_State_sending) := email.trust_State_sending;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

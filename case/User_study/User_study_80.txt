@@ -1,0 +1,10 @@
+IF Swimming Pool Water Quality Sensor.waterQuality > 20 THEN Swimming Pool Water Pump.on
+IF Weather.weather = rainy THEN Window.close
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Illuminance Sensor.illuminance < 9 THEN Light.on
+IF Clock.time = 22 THEN TV.off
+IF Air Quality Monitor.airQuality > 20 THEN Window.open
+IF Water Heater.waterTemperature < 40 THEN Water Heater.on
+IF Motion Detector.motion = active THEN Light.on
+IF Gas Sensor.gas > 16 THEN Ventilator.on

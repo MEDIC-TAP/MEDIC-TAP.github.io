@@ -1,0 +1,207 @@
+--IF Car.location = garage THEN Garage Door.open
+--IF Air Quality Monitor.airQuality > 70 THEN Window.open
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	window: Window;
+	car: Car;
+	airqualitymonitor: AirQualityMonitor;
+	garagedoor: GarageDoor;
+	a_airQuality: 0..100;
+	a_carbonDioxide: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(window.is_attack) + toint(car.is_attack) + toint(airqualitymonitor.is_attack) + toint(garagedoor.is_attack);
+
+	next(window.WindowState) :=
+	case
+		airqualitymonitor.airQuality>70 & window.is_attack=FALSE: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(garagedoor.DoorState) :=
+	case
+		car.location=garage & garagedoor.is_attack=FALSE: open;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		airqualitymonitor.airQuality>70 & (airqualitymonitor.trust_airQuality=trusted): trusted;
+		airqualitymonitor.airQuality>70: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=3 & window.is_attack=FALSE);
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);

@@ -1,0 +1,299 @@
+--IF Weather.weather = windy THEN Window.close
+--IF Car.location = garage THEN Garage Door.open
+--IF Smoke Sensor.smoke = detected THEN Window.open
+--IF Weather.weather = windy THEN Door.lock
+--IF Temperature Sensor.temperature < 10 THEN Window.close
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SmokeSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	window: Window;
+	temperaturesensor: TemperatureSensor;
+	car: Car;
+	smokesensor: SmokeSensor;
+	garagedoor: GarageDoor;
+	door: Door;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_smoke: {clear, detected, tested};
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(window.is_attack) + toint(temperaturesensor.is_attack) + toint(car.is_attack) + toint(smokesensor.is_attack) + toint(garagedoor.is_attack) + toint(door.is_attack);
+
+	next(window.WindowState) :=
+	case
+		weather.weather=windy & window.is_attack=FALSE: closed;
+		smokesensor.smoke=detected & window.is_attack=FALSE: open;
+		temperaturesensor.temperature<10 & window.is_attack=FALSE: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(garagedoor.DoorState) :=
+	case
+		car.location=garage & garagedoor.is_attack=FALSE: open;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		weather.weather=windy & door.is_attack=FALSE: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	smokesensor.smoke:=
+	case
+		smokesensor.is_attack=TRUE: {clear, detected, tested};
+		TRUE: a_smoke;
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		temperaturesensor.temperature<10 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature<10: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=1 & garagedoor.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=1 & door.is_attack=FALSE);

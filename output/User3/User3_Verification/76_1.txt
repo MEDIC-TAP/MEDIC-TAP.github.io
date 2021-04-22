@@ -1,0 +1,30 @@
+-- specification AG !(((window.WindowState = open & window.trust_WindowState_open = untrusted) & intensity <= 3) & window.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 3
+  weather.is_attack = TRUE
+  weather.trust_weather = untrusted
+  window.is_attack = FALSE
+  gassensor.is_attack = TRUE
+  gassensor.trust_gas = untrusted
+  smokesensor.is_attack = TRUE
+  smokesensor.trust_smoke = untrusted
+  weather.weather = sunny
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  gassensor.gas = 0
+  smokesensor.smoke = clear
+  a_weather = sunny
+  a_gas = 0
+  a_smoke = clear
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted

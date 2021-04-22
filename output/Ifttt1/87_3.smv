@@ -1,0 +1,228 @@
+--IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+--IF Dryer.MachineState = stop THEN Sina Weibo.post
+--IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Dryer
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DryerMode: {highHeat, lowHeat, regular};
+	MachineState: {pause, run, stop};
+	regular_a: boolean;
+	lowHeat_a: boolean;
+	highHeat_a: boolean;
+	pause_a: boolean;
+	run_a: boolean;
+	stop_a: boolean;
+	dryerJobState: {cooling, delayWash, drying, finished, none, weightSensing, wrinklePrevent};
+	trust_dryerJobState: {untrusted};
+	trust_DryerMode_highHeat: {untrusted, trusted};
+	trust_DryerMode_lowHeat: {untrusted, trusted};
+	trust_DryerMode_regular: {untrusted, trusted};
+	trust_MachineState_pause: {untrusted, trusted};
+	trust_MachineState_run: {untrusted, trusted};
+	trust_MachineState_stop: {untrusted, trusted};
+ASSIGN
+	init(DryerMode) := regular;
+	init(MachineState) := pause;
+	init(regular_a) := FALSE;
+	init(lowHeat_a) := FALSE;
+	init(highHeat_a) := FALSE;
+	init(pause_a) := FALSE;
+	init(run_a) := FALSE;
+	init(stop_a) := FALSE;
+	init(trust_DryerMode_regular) := trusted;
+	init(trust_MachineState_pause) := trusted;
+	init(trust_MachineState_run) := trusted;
+	init(trust_MachineState_stop) := trusted;
+	init(trust_DryerMode_lowHeat) := trusted;
+	init(trust_DryerMode_highHeat) := trusted;
+
+MODULE RefrigeratorDoorSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_contact: {untrusted, trusted};
+VAR
+	contact: {closed, open};
+ASSIGN
+	init(trust_contact):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	temperaturesensor: TemperatureSensor;
+	sinaweibo: SinaWeibo;
+	dryer: Dryer;
+	refrigeratordoorsensor: RefrigeratorDoorSensor;
+	a_temperature: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(temperaturesensor.is_attack) + toint(sinaweibo.is_attack) + toint(dryer.is_attack) + toint(refrigeratordoorsensor.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		temperaturesensor.temperature>30 & sinaweibo.is_attack=FALSE: posting;
+		dryer.MachineState=stop & sinaweibo.is_attack=FALSE: posting;
+		refrigeratordoorsensor.contact=open & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(dryer.DryerMode) :=
+	case
+		dryer.DryerMode=highHeat: {highHeat, lowHeat, regular};
+		dryer.DryerMode=lowHeat: {highHeat, lowHeat, regular};
+		dryer.DryerMode=regular: {highHeat, lowHeat, regular};
+		TRUE: dryer.DryerMode;
+	esac;
+
+	next(dryer.MachineState) :=
+	case
+		dryer.MachineState=pause: {pause, run, stop};
+		dryer.MachineState=run: {pause, run, stop};
+		dryer.MachineState=stop: {pause, run, stop};
+		TRUE: dryer.MachineState;
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(dryer.dryerJobState) :=
+	case
+		TRUE: {cooling, delayWash, drying, finished, none, weightSensing, wrinklePrevent};
+	esac;
+
+	next(refrigeratordoorsensor.contact) :=
+	case
+		refrigeratordoorsensor.is_attack=TRUE: {closed, open};
+		TRUE: {closed, open};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.regular_a) :=
+	case
+		dryer.DryerMode!=regular & next(dryer.DryerMode)=regular: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.lowHeat_a) :=
+	case
+		dryer.DryerMode!=lowHeat & next(dryer.DryerMode)=lowHeat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.highHeat_a) :=
+	case
+		dryer.DryerMode!=highHeat & next(dryer.DryerMode)=highHeat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.pause_a) :=
+	case
+		dryer.MachineState!=pause & next(dryer.MachineState)=pause: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.run_a) :=
+	case
+		dryer.MachineState!=run & next(dryer.MachineState)=run: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.stop_a) :=
+	case
+		dryer.MachineState!=stop & next(dryer.MachineState)=stop: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		dryer.MachineState=stop & (dryer.trust_MachineState_stop=trusted): trusted;
+		dryer.MachineState=stop: untrusted;
+		refrigeratordoorsensor.contact=open & (refrigeratordoorsensor.trust_contact=trusted): trusted;
+		refrigeratordoorsensor.contact=open: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(dryer.trust_DryerMode_highHeat) := dryer.trust_DryerMode_highHeat;
+
+	next(dryer.trust_DryerMode_lowHeat) := dryer.trust_DryerMode_lowHeat;
+
+	next(dryer.trust_DryerMode_regular) := dryer.trust_DryerMode_regular;
+
+	next(dryer.trust_MachineState_pause) := dryer.trust_MachineState_pause;
+
+	next(dryer.trust_MachineState_run) := dryer.trust_MachineState_run;
+
+	next(dryer.trust_MachineState_stop) := dryer.trust_MachineState_stop;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=1 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=1);

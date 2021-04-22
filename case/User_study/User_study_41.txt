@@ -1,0 +1,6 @@
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Humidity Sensor.humidity < 30 THEN Humidifier.on
+IF Illuminance Sensor.illuminance < 30 THEN Window Shade.open
+IF Motion Detector.motion = active THEN TV.on 

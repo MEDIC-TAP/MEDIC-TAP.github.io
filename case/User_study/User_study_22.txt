@@ -1,0 +1,5 @@
+IF Gas Sensor.gas > 80 THEN Window.open
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message

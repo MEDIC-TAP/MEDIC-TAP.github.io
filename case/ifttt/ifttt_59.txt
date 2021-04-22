@@ -1,0 +1,29 @@
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Clock.time = 6 THEN Coffee Maker.on
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Air Conditioner.fanOnly
+IF Humidity Sensor.humidity > 60 THEN Email.send mail
+IF Light.SwitchState = on THEN Light.off
+IF Clock.time = 20 THEN Light.on
+IF Calendar.date = weekend THEN Camera.on
+IF Sina Weibo.State = posting THEN Air Conditioner.auto
+IF Home Mode.Mode = away THEN Light.on
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Motion Detector.motion = inactive THEN Light.off
+IF Refrigerator Door Sensor.contact = open THEN Light.on
+IF Door.LockState = unlocked THEN Camera.on
+IF Motion Detector.motion = active THEN Sina Weibo.post
+IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+IF Clock.time = 20 THEN Camera.off
+IF Alarm.AlertState = both THEN Light.on
+IF Calendar.date = weekend THEN Air Conditioner.auto
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Air Quality Monitor.airQuality > 70 THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money
+IF Sina Weibo.State = posting THEN Air Purifier.on
+IF Temperature Sensor.temperature < 10 THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Clock.time = 6 THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Light.on
+IF Motion Detector.motion = active THEN Camera.take photo

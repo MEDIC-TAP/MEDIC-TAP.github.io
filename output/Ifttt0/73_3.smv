@@ -1,0 +1,115 @@
+--IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+--IF Weather.weather = rainy THEN Sina Weibo.post
+--IF Clock.time = 19 THEN Sina Weibo.post
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE SmokeSensor
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):= untrusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	smokesensor: SmokeSensor;
+	clock: Clock;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_smoke: {clear, detected, tested};
+	a_time: 0..23;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		smokesensor.smoke=detected: posting;
+		weather.weather=rainy: posting;
+		clock.time=19: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	weather.weather := a_weather;
+
+	smokesensor.smoke := a_smoke;
+
+	clock.time := a_time;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

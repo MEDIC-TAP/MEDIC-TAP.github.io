@@ -1,0 +1,12 @@
+IF Clock.time = 6 THEN Coffee Maker.on
+IF Car.location = garage THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Sina Weibo.State = posting THEN Camera.on
+IF Motion Detector.motion = active THEN Camera.off
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Mobile Phone.location = home THEN Garage Door.open
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money

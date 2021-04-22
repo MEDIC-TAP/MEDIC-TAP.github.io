@@ -1,0 +1,122 @@
+--IF Calendar.date = weekdays THEN Sina Weibo.post
+--IF Car.location = garage THEN Sina Weibo.post
+--IF Calendar.date = weekend THEN Sina Weibo.post
+--IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Car
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):= trusted;
+
+MODULE Calendar
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):= trusted;
+	init(trust_season):= trusted;
+
+MODULE RefrigeratorDoorSensor
+FROZENVAR
+	trust_contact: {untrusted, trusted};
+VAR
+	contact: {closed, open};
+ASSIGN
+	init(trust_contact):= untrusted;
+
+MODULE main
+VAR
+	sinaweibo: SinaWeibo;
+	car: Car;
+	calendar: Calendar;
+	refrigeratordoorsensor: RefrigeratorDoorSensor;
+	a_date: {weekdays, weekend, MothersDay};
+	a_season: {spring, summer, autumn, winter};
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		calendar.date=weekdays: posting;
+		car.location=garage: posting;
+		calendar.date=weekend: posting;
+		refrigeratordoorsensor.contact=open: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(car.location) :=
+	case
+		TRUE: {garage, away};
+	esac;
+
+	calendar.date := a_date;
+
+	calendar.season := a_season;
+
+	next(refrigeratordoorsensor.contact) :=
+	case
+		TRUE: {closed, open};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		calendar.date=weekdays & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekdays: untrusted;
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		refrigeratordoorsensor.contact=open & (refrigeratordoorsensor.trust_contact=trusted): trusted;
+		refrigeratordoorsensor.contact=open: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

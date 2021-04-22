@@ -1,0 +1,229 @@
+--IF Alarm.AlertState = both THEN Sina Weibo.post
+--IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+--IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo_1
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Alarm
+FROZENVAR
+	is_attack: boolean;
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	airqualitymonitor: AirQualityMonitor;
+	sinaweibo_1: SinaWeibo_1;
+	alarm: Alarm;
+	a_airQuality: 0..100;
+	a_carbonDioxide: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(airqualitymonitor.is_attack) + toint(sinaweibo_1.is_attack) + toint(alarm.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		alarm.AlertState=both & sinaweibo.is_attack=FALSE: posting;
+		airqualitymonitor.carbonDioxide>70 & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo_1.State=posting & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(sinaweibo_1.State) :=
+	case
+		sinaweibo_1.State=posting: idle;
+		sinaweibo_1.State=idle: {idle, posting};
+		sinaweibo_1.State=posting: {posting};
+		TRUE: sinaweibo_1.State;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo_1.post_a) :=
+	case
+		sinaweibo_1.State=idle & next(sinaweibo_1.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		alarm.AlertState=both & (alarm.trust_AlertState_both=trusted): trusted;
+		alarm.AlertState=both: untrusted;
+		airqualitymonitor.carbonDioxide>70 & (airqualitymonitor.trust_carbonDioxide=trusted): trusted;
+		airqualitymonitor.carbonDioxide>70: untrusted;
+		sinaweibo_1.State=posting & (sinaweibo_1.trust_State_posting=trusted): trusted;
+		sinaweibo_1.State=posting: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(sinaweibo_1.trust_State_idle) := sinaweibo_1.trust_State_idle;
+
+	next(sinaweibo_1.trust_State_posting) := sinaweibo_1.trust_State_posting;
+
+	next(alarm.trust_AlertState_both) := alarm.trust_AlertState_both;
+
+	next(alarm.trust_AlertState_off) := alarm.trust_AlertState_off;
+
+	next(alarm.trust_AlertState_siren) := alarm.trust_AlertState_siren;
+
+	next(alarm.trust_AlertState_strobe) := alarm.trust_AlertState_strobe;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+	next(sinaweibo_1.privacy_content) := sinaweibo_1.privacy_content;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=3 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=3);
+SPEC AG !(sinaweibo_1.State=posting & sinaweibo_1.trust_State_posting=untrusted & intensity<=3 & sinaweibo_1.is_attack=FALSE);
+SPEC AG !(sinaweibo_1.privacy_content=private & intensity<=3);

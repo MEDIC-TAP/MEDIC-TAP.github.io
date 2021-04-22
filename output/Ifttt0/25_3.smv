@@ -1,0 +1,217 @@
+--IF Alarm.AlertState = both THEN Sina Weibo.post
+--IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+--IF Motion Detector.motion = active THEN Alarm.off
+--IF Clock.time = 20 THEN Sina Weibo.post
+--IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE Alarm
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE RefrigeratorDoorSensor
+FROZENVAR
+	trust_contact: {untrusted, trusted};
+VAR
+	contact: {closed, open};
+ASSIGN
+	init(trust_contact):= untrusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	motiondetector: MotionDetector;
+	sinaweibo: SinaWeibo;
+	temperaturesensor: TemperatureSensor;
+	alarm: Alarm;
+	refrigeratordoorsensor: RefrigeratorDoorSensor;
+	clock: Clock;
+	a_motion: {active, inactive};
+	a_temperature: 0..100;
+	a_time: 0..23;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		alarm.AlertState=both: posting;
+		temperaturesensor.temperature>30: posting;
+		clock.time=20: posting;
+		refrigeratordoorsensor.contact=open: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		motiondetector.motion=active: off;
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	motiondetector.motion := a_motion;
+
+	temperaturesensor.temperature := a_temperature;
+
+	next(refrigeratordoorsensor.contact) :=
+	case
+		TRUE: {closed, open};
+	esac;
+
+	clock.time := a_time;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		alarm.AlertState=both & (alarm.trust_AlertState_both=trusted): trusted;
+		alarm.AlertState=both: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		refrigeratordoorsensor.contact=open & (refrigeratordoorsensor.trust_contact=trusted): trusted;
+		refrigeratordoorsensor.contact=open: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(alarm.trust_AlertState_both) :=
+	case
+		TRUE: alarm.trust_AlertState_both;
+	esac;
+
+	next(alarm.trust_AlertState_off) :=
+	case
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		TRUE: alarm.trust_AlertState_off;
+	esac;
+
+	next(alarm.trust_AlertState_siren) :=
+	case
+		TRUE: alarm.trust_AlertState_siren;
+	esac;
+
+	next(alarm.trust_AlertState_strobe) :=
+	case
+		TRUE: alarm.trust_AlertState_strobe;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

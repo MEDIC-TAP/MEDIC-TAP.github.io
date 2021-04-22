@@ -1,0 +1,7 @@
+IF Illuminance Sensor.illuminance < 30 & Motion Detector.motion = active THEN Light.on
+IF Illuminance Sensor.illuminance > 80 THEN Light.off
+IF TV.on THEN Window Shade.close
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Clock.time = 20 THEN Washer Machine.run
+IF Car.location = garage THEN Garage Door.open
+IF Alarm.AlertState = both THEN Camera.take photo

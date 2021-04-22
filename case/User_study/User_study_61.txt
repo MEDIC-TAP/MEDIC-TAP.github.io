@@ -1,0 +1,10 @@
+IF Weather.weather = windy THEN Window.close
+IF Weather.weather = rainy THEN Window.close
+IF Weather.weather = snowy THEN Window.close
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Illuminance Sensor.illuminance < 10 & Motion Detector.motion = active THEN Light.on
+IF Illuminance Sensor.illuminance > 20 THEN Light.off
+IF Door.LockState = unlocked THEN Coffee Maker.on
+IF Air Quality Monitor.airQuality > 20 THEN Window.close
+IF Door.LockState = unlocked THEN Water Heater.on
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on

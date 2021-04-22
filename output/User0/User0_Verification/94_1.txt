@@ -1,0 +1,36 @@
+-- specification AG !(window.WindowState = open & window.trust_WindowState_open = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  weather.trust_weather = untrusted
+  motiondetector.trust_motion = trusted
+  temperaturesensor.trust_temperature = untrusted
+  airqualitymonitor.trust_airQuality = untrusted
+  airqualitymonitor.trust_carbonDioxide = untrusted
+  weather.weather = cloudy
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  motiondetector.motion = inactive
+  temperaturesensor.temperature = 63
+  airqualitymonitor.airQuality = 63
+  airqualitymonitor.carbonDioxide = 63
+  door.LockState = locked
+  door.lock_a = FALSE
+  door.unlock_a = FALSE
+  door.trust_LockState_locked = trusted
+  door.trust_LockState_unlocked = trusted
+  a_airQuality = 63
+  a_motion = inactive
+  a_weather = cloudy
+  a_temperature = 63
+  a_carbonDioxide = 63
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted

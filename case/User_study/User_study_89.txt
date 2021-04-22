@@ -1,0 +1,11 @@
+IF Motion Detector.motion = active & Illuminance Sensor.illuminance < 9 THEN Light.on
+IF Motion Detector.motion = inactive THEN Light.off
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Motion Detector.motion = active THEN TV.on
+IF Motion Detector.motion = inactive THEN TV.off
+IF Motion Detector.motion = active THEN Light.on
+IF Water Heater.waterTemperature < 30 THEN Water Heater.on
+IF Water Heater.waterTemperature > 60 THEN Water Heater.off
+IF Air Conditioner.cool THEN Window.close
+IF Air Conditioner.heat THEN Window.close

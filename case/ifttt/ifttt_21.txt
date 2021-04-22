@@ -1,0 +1,7 @@
+IF Light.SwitchState = on THEN Light.on
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+IF Clock.time = 20 THEN Light.off
+IF Light.SwitchState = off THEN Light.on
+IF Home Mode.Mode = away THEN Sina Weibo.post
+IF Email.receiveMail = receive THEN Alarm.both
+IF Motion Detector.motion = inactive THEN Light.off

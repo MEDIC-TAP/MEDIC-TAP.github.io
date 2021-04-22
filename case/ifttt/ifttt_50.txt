@@ -1,0 +1,10 @@
+IF Clock.time = 20 THEN Oven.paused
+IF Motion Detector.motion = active THEN Light.off
+IF Sina Weibo.State = posting THEN Air Conditioner.fanOnly
+IF Calendar.date = weekend THEN Camera.off
+IF Sina Weibo.State = posting THEN Light.off
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on
+IF Calendar.date = weekend THEN Light.off
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Clock.time = 20 THEN Door.lock
+IF Home Mode.Mode = home THEN Light.on

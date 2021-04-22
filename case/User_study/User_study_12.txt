@@ -1,0 +1,5 @@
+IF Weather.weather = rainy & Window.WindowState = open THEN Window.close
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Home Mode.send alert message THEN Camera.on
+IF Smoke Sensor.smoke = detected THEN Ventilator.on
+IF Smoke Sensor.smoke = detected THEN Alarm.both

@@ -1,0 +1,16 @@
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Clock.time = 6 THEN Sina Weibo.post
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Clock.time = 20 THEN Light.off
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Air Quality Monitor.airQuality > 70 THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Home Mode.Mode = home THEN Light.on
+IF Car.location = away THEN Light.off
+IF Calendar.date = MothersDay THEN Light.off
+IF Email.receiveMail = receive THEN Light.on
+IF Door.LockState = locked THEN Light.on
+IF Clock.time = 20 THEN Washer Machine.run
+IF Weather.weather = windy THEN Garage Door.close
+IF Door.LockState = locked THEN Light.off
+IF Humidity Sensor.humidity > 60 THEN Online Bank.transfer money

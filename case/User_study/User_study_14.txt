@@ -1,0 +1,5 @@
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Motion Detector.motion = active THEN Light.on

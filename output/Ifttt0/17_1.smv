@@ -1,0 +1,120 @@
+--IF Car.location = away THEN Garage Door.close
+--IF Motion Detector.motion = active THEN Garage Door.open
+--IF Clock.time = 20 THEN Garage Door.close
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE Car
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):= trusted;
+
+MODULE GarageDoor
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	motiondetector: MotionDetector;
+	car: Car;
+	garagedoor: GarageDoor;
+	clock: Clock;
+	a_motion: {active, inactive};
+	a_time: 0..23;
+ASSIGN
+	next(garagedoor.DoorState) :=
+	case
+		car.location=away: closed;
+		motiondetector.motion=active: open;
+		clock.time=20: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	motiondetector.motion := a_motion;
+
+	next(car.location) :=
+	case
+		TRUE: {garage, away};
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	clock.time := a_time;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		car.location=away & (car.trust_location=trusted): trusted;
+		car.location=away: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted);

@@ -1,0 +1,23 @@
+-- specification AG !(((onlinebank.State = transfering & onlinebank.trust_State_transfering = untrusted) & intensity <= 2) & onlinebank.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  temperaturesensor.is_attack = TRUE
+  temperaturesensor.trust_temperature = untrusted
+  humiditysensor.is_attack = FALSE
+  humiditysensor.trust_humidity = trusted
+  onlinebank.is_attack = FALSE
+  temperaturesensor.temperature = 0
+  humiditysensor.humidity = 63
+  onlinebank.State = idle
+  onlinebank.transfermoney_a = FALSE
+  onlinebank.trust_State_idle = trusted
+  onlinebank.trust_State_transfering = trusted
+  a_temperature = 0
+  a_humidity = 63
+-> State: 1.2 <-
+  onlinebank.State = transfering
+  onlinebank.transfermoney_a = TRUE
+  onlinebank.trust_State_transfering = untrusted

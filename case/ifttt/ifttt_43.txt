@@ -1,0 +1,15 @@
+IF Email.receiveMail = receive THEN Email.send mail
+IF Clock.time = 20 THEN Air Conditioner.cool
+IF Clock.time = 6 THEN Email.send mail
+IF Alarm.AlertState = both THEN Email.send mail
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Clock.time = 6 THEN Light.on
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Alarm.AlertState = both THEN Alarm.both
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Weather.weather = windy THEN Alarm.both
+IF Clock.time = 20 THEN Door.lock
+IF Online Bank.State = transfering THEN Email.send mail
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Clock.time = 20 THEN Camera.off

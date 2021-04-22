@@ -1,0 +1,13 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 12 THEN Air Conditioner.heat
+IF Temperature Sensor.temperature = 17 THEN Air Conditioner.off
+IF Illuminance Sensor.illuminance < 9 & Motion Detector.motion = active THEN Light.on
+IF Illuminance Sensor.illuminance > 21 & Motion Detector.motion = active THEN Light.off
+IF Air Quality Monitor.airQuality > 20 THEN Window.close
+IF Weather.weather = windy THEN Window.close
+IF Weather.weather = snowy THEN Window.close
+IF Weather.weather = foggy THEN Window.close
+IF Weather.weather = rainy THEN Window.close
+IF Weather.weather = sunny THEN Window.open
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Clock.time = 7 THEN Light.on

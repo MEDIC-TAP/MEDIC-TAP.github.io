@@ -1,0 +1,17 @@
+IF Light.SwitchState = on THEN Light.off
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Temperature Sensor.temperature > 30 THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Clock.time = 20 THEN Email.send mail
+IF Calendar.date = weekend THEN Camera.off
+IF Weather.weather = windy THEN Email.send mail
+IF Clock.time = 6 THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Light.on
+IF Clock.time = 20 THEN Air Conditioner.auto
+IF Light.SwitchState = off THEN Light.on
+IF Email.State = sending THEN Sina Weibo.post
+IF Weather.weather = windy THEN Sina Weibo.post
+IF Home Mode.Mode = away THEN Light.off
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Clock.time = 6 THEN Email.send mail

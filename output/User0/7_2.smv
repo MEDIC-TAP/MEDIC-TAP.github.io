@@ -1,0 +1,80 @@
+--IF Electricity Meter Sensor.energy > 80 THEN Online Bank.transfer money
+
+MODULE ElectricityMeterSensor
+FROZENVAR
+	trust_energy: {untrusted, trusted};
+	trust_power: {untrusted, trusted};
+VAR
+	energy: 0..100;
+	power: 0..100;
+ASSIGN
+	init(trust_energy):= untrusted;
+	init(trust_power):= untrusted;
+
+MODULE OnlineBank
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE main
+VAR
+	electricitymetersensor: ElectricityMeterSensor;
+	onlinebank: OnlineBank;
+	a_power: 0..100;
+	a_energy: 0..100;
+ASSIGN
+	next(onlinebank.State) :=
+	case
+		electricitymetersensor.energy>80: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(a_power) :=
+	case
+		a_power>=100: {100};
+		a_power=0: {a_power, a_power+1};
+		a_power<0: {0};
+		TRUE: {a_power, a_power+1};
+	esac;
+
+	next(a_energy) :=
+	case
+		a_energy>=100: {100};
+		a_energy=0: {a_energy, a_energy+1};
+		a_energy<0: {0};
+		TRUE: {a_energy, a_energy+1};
+	esac;
+
+	electricitymetersensor.energy := a_energy;
+
+	electricitymetersensor.power := a_power;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		electricitymetersensor.energy>80 & (electricitymetersensor.trust_energy=trusted): trusted;
+		electricitymetersensor.energy>80: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted);

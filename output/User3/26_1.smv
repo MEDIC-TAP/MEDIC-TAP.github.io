@@ -1,0 +1,230 @@
+--IF Humidity Sensor.humidity > 60 THEN Window.open
+--IF Mobile Phone.location = garageDoor THEN Garage Door.open
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE HumiditySensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE MobilePhone
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {on, takingphoto, uploadingtocloud};
+	takephoto_a: boolean;
+	uploadtocloud_a: boolean;
+	location: {home, away, garageDoor, Shanghai};
+	steps: 0..100;
+	trust_location: {trusted};
+	trust_steps: {trusted};
+	trust_State_on: {untrusted, trusted};
+	trust_State_takingphoto: {untrusted, trusted};
+	trust_State_uploadingtocloud: {untrusted, trusted};
+	privacy_photo: {private};
+	privacy_steps: {public};
+	privacy_location: {public};
+ASSIGN
+	init(State) := on;
+	init(takephoto_a) := FALSE;
+	init(uploadtocloud_a) := FALSE;
+	init(trust_State_on) := trusted;
+	init(trust_State_takingphoto) := trusted;
+	init(trust_State_uploadingtocloud) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	window: Window;
+	humiditysensor: HumiditySensor;
+	garagedoor: GarageDoor;
+	mobilephone: MobilePhone;
+	a_humidity: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(window.is_attack) + toint(humiditysensor.is_attack) + toint(garagedoor.is_attack) + toint(mobilephone.is_attack);
+
+	next(window.WindowState) :=
+	case
+		humiditysensor.humidity>60 & window.is_attack=FALSE: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(garagedoor.DoorState) :=
+	case
+		mobilephone.location=garageDoor & garagedoor.is_attack=FALSE: open;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(mobilephone.State) :=
+	case
+		mobilephone.State=takingphoto: on;
+		mobilephone.State=uploadingtocloud: on;
+		mobilephone.State=on: {on, takingphoto, uploadingtocloud};
+		mobilephone.State=takingphoto: {takingphoto};
+		mobilephone.State=uploadingtocloud: {uploadingtocloud};
+		TRUE: mobilephone.State;
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100: {toint(a_humidity)-1, a_humidity};
+		a_humidity>100: {100};
+		a_humidity=0: {a_humidity, a_humidity+1};
+		a_humidity<0: {0};
+		TRUE: {a_humidity+-1, a_humidity, a_humidity+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	humiditysensor.humidity:=
+	case
+		humiditysensor.is_attack=TRUE: 0..100;
+		TRUE: a_humidity;
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(mobilephone.location) :=
+	case
+		TRUE: {home, away, garageDoor, Shanghai};
+	esac;
+
+	next(mobilephone.steps) :=
+	case
+		mobilephone.steps>=100: {100};
+		mobilephone.steps=0: {mobilephone.steps, mobilephone.steps+1};
+		mobilephone.steps<0: {0};
+		TRUE: {mobilephone.steps, mobilephone.steps+1};
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.takephoto_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.uploadtocloud_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=uploadingtocloud: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		humiditysensor.humidity>60 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>60: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		mobilephone.location=garageDoor & (mobilephone.trust_location=trusted): trusted;
+		mobilephone.location=garageDoor: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(mobilephone.trust_State_on) := mobilephone.trust_State_on;
+
+	next(mobilephone.trust_State_takingphoto) := mobilephone.trust_State_takingphoto;
+
+	next(mobilephone.trust_State_uploadingtocloud) := mobilephone.trust_State_uploadingtocloud;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=3 & window.is_attack=FALSE);
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);

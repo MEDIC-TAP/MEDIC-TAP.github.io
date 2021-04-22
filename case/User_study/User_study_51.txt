@@ -1,0 +1,8 @@
+IF Cooker.on THEN Range Hood.on
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 5 THEN Air Conditioner.heat
+IF Motion Detector.motion = inactive THEN Window Shade.open
+IF Motion Detector.motion = active THEN Window Shade.close
+IF Motion Detector.motion = active THEN Light.on
+IF Motion Detector.motion = active THEN TV.on 
+IF Smoke Sensor.smoke = detected THEN Home Mode.send alert message

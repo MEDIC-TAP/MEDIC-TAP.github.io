@@ -1,0 +1,6 @@
+IF Mobile Phone.take photo THEN Mobile Phone.upload to cloud
+IF Clock.time = 7 & Calendar.date = weekdays THEN Garage Door.open
+IF Mobile Phone.location != home THEN Home Mode.set away mode
+IF Weather.weather = sunny & Air Quality Monitor.airQuality < 50 & Home Mode.Mode = home THEN Window.open
+IF Calendar.date = MothersDay THEN Online Bank.transfer money
+IF Calendar.date = MothersDay THEN Sina Weibo.post

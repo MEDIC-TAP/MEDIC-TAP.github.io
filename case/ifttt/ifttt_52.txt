@@ -1,0 +1,7 @@
+IF Washer Machine.MachineState = stop THEN Sina Weibo.post
+IF Clock.time = 19 THEN Online Bank.transfer money
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Sina Weibo.State = posting THEN Air Conditioner.auto
+IF Temperature Sensor.temperature > 30 THEN Thermostat.off

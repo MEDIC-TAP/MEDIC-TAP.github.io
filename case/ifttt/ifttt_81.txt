@@ -1,0 +1,18 @@
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+IF Smoke Sensor.smoke = detected THEN Email.send mail
+IF Motion Detector.motion = active THEN Sprinkler Controller.close
+IF Electricity Meter Sensor.power > 70 THEN Email.send mail
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Temperature Sensor.temperature < 10 THEN Email.send mail
+IF Alarm.AlertState = both THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.auto
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Clock.time = 20 THEN Sina Weibo.post
+IF Weather.weather = windy THEN Email.send mail
+IF Clock.time = 20 THEN Email.send mail
+IF Calendar.date = weekdays THEN Online Bank.transfer money
+IF Temperature Sensor.temperature < 10 THEN Light.on

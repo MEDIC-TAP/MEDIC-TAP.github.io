@@ -1,0 +1,27 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Door RFID.RFID = not authorized THEN Door.lock
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Electricity Meter Sensor.energy > 80 THEN Home Mode.send alert message
+IF Temperature Sensor.temperature < 5 THEN Home Mode.send alert message
+IF Weather.weather = rainy THEN Home Mode.send alert message
+IF Weather.weather = snowy THEN Home Mode.send alert message
+IF Door.LockState = unlocked THEN Coffee Maker.on
+IF Illuminance Sensor.illuminance < 10 THEN Door.unlock
+IF Motion Detector.motion = inactive THEN Air Purifier.off
+IF Motion Detector.motion = inactive THEN TV.off
+IF Motion Detector.motion = inactive THEN Light.off
+IF Motion Detector.motion = inactive THEN Light.off
+IF Motion Detector.motion = inactive THEN Light.off
+IF Motion Detector.motion = inactive THEN Light.off
+IF Motion Detector.motion = inactive THEN Window.close
+IF Motion Detector.motion = inactive THEN Window.close
+IF Motion Detector.motion = inactive THEN Window.close
+IF Illuminance Sensor.illuminance < 10 THEN Light.off
+IF Illuminance Sensor.illuminance < 10 THEN Light.off
+IF Illuminance Sensor.illuminance < 10 THEN Light.off
+IF Illuminance Sensor.illuminance < 10 THEN Light.off
+IF Illuminance Sensor.illuminance > 20 THEN Light.on
+IF Illuminance Sensor.illuminance > 20 THEN Light.on
+IF Illuminance Sensor.illuminance > 20 THEN Light.on
+IF Illuminance Sensor.illuminance > 20 THEN Light.on

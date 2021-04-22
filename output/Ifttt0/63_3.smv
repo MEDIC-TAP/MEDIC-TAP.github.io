@@ -1,0 +1,433 @@
+--IF Email.State = sending THEN Sina Weibo.post
+--IF Calendar.date = weekdays THEN Sina Weibo.post
+--IF Weather.weather = rainy THEN Sina Weibo.post
+--IF Alarm.AlertState = both THEN Sina Weibo.post
+--IF Air Quality Monitor.airQuality > 70 THEN Email.send mail
+--IF Motion Detector.motion = active THEN Sina Weibo.post
+--IF Home Mode.Mode = away THEN Email.send mail
+--IF Smoke Sensor.smoke = detected THEN Email.send mail
+--IF Calendar.date = weekend THEN Sina Weibo.post
+--IF Motion Detector.motion = active THEN Email.send mail
+--IF Calendar.date = MothersDay THEN Email.send mail
+--IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Email
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):= untrusted;
+	init(trust_carbonDioxide):= untrusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):= untrusted;
+
+MODULE Calendar
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):= trusted;
+	init(trust_season):= trusted;
+
+MODULE Alarm
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE RefrigeratorDoorSensor
+FROZENVAR
+	trust_contact: {untrusted, trusted};
+VAR
+	contact: {closed, open};
+ASSIGN
+	init(trust_contact):= untrusted;
+
+MODULE HomeMode
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	motiondetector: MotionDetector;
+	sinaweibo: SinaWeibo;
+	email: Email;
+	airqualitymonitor: AirQualityMonitor;
+	smokesensor: SmokeSensor;
+	calendar: Calendar;
+	alarm: Alarm;
+	refrigeratordoorsensor: RefrigeratorDoorSensor;
+	homemode: HomeMode;
+	a_date: {weekdays, weekend, MothersDay};
+	a_airQuality: 0..100;
+	a_motion: {active, inactive};
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_smoke: {clear, detected, tested};
+	a_carbonDioxide: 0..100;
+	a_season: {spring, summer, autumn, winter};
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		email.State=sending: posting;
+		calendar.date=weekdays: posting;
+		weather.weather=rainy: posting;
+		alarm.AlertState=both: posting;
+		motiondetector.motion=active: posting;
+		calendar.date=weekend: posting;
+		refrigeratordoorsensor.contact=open: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		airqualitymonitor.airQuality>70: sending;
+		homemode.Mode=away: sending;
+		smokesensor.smoke=detected: sending;
+		motiondetector.motion=active: sending;
+		calendar.date=MothersDay: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	weather.weather := a_weather;
+
+	motiondetector.motion := a_motion;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	airqualitymonitor.airQuality := a_airQuality;
+
+	airqualitymonitor.carbonDioxide := a_carbonDioxide;
+
+	smokesensor.smoke := a_smoke;
+
+	calendar.date := a_date;
+
+	calendar.season := a_season;
+
+	next(refrigeratordoorsensor.contact) :=
+	case
+		TRUE: {closed, open};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		calendar.date=weekdays & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekdays: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		alarm.AlertState=both & (alarm.trust_AlertState_both=trusted): trusted;
+		alarm.AlertState=both: untrusted;
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		refrigeratordoorsensor.contact=open & (refrigeratordoorsensor.trust_contact=trusted): trusted;
+		refrigeratordoorsensor.contact=open: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		airqualitymonitor.airQuality>70 & (airqualitymonitor.trust_airQuality=trusted): trusted;
+		airqualitymonitor.airQuality>70: untrusted;
+		homemode.Mode=away & (homemode.trust_Mode_away=trusted): trusted;
+		homemode.Mode=away: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		calendar.date=MothersDay & (calendar.trust_date=trusted): trusted;
+		calendar.date=MothersDay: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(alarm.trust_AlertState_both) := alarm.trust_AlertState_both;
+
+	next(alarm.trust_AlertState_off) := alarm.trust_AlertState_off;
+
+	next(alarm.trust_AlertState_siren) := alarm.trust_AlertState_siren;
+
+	next(alarm.trust_AlertState_strobe) := alarm.trust_AlertState_strobe;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

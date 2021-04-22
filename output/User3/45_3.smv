@@ -1,0 +1,118 @@
+--IF Camera.take photo THEN Sina Weibo.post(Camera.photo)
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Camera
+FROZENVAR
+	is_attack: boolean;
+VAR
+	MachineState: {off, on, takingphoto};
+	on_a: boolean;
+	off_a: boolean;
+	takephoto_a: boolean;
+	trust_MachineState_off: {untrusted, trusted};
+	trust_MachineState_on: {untrusted, trusted};
+	trust_MachineState_takingphoto: {untrusted, trusted};
+	privacy_photo: {private};
+ASSIGN
+	init(MachineState) := on;
+	init(on_a) := FALSE;
+	init(off_a) := FALSE;
+	init(takephoto_a) := FALSE;
+	init(trust_MachineState_on) := trusted;
+	init(trust_MachineState_off) := trusted;
+	init(trust_MachineState_takingphoto) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	camera: Camera;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(camera.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		camera.takephoto_a = TRUE & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(camera.MachineState) :=
+	case
+		camera.MachineState=takingphoto: on;
+		camera.MachineState=off: {off, on};
+		camera.MachineState=on: {off, on, takingphoto};
+		camera.MachineState=takingphoto: {takingphoto};
+		TRUE: camera.MachineState;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(camera.on_a) :=
+	case
+		camera.MachineState=off & next(camera.MachineState)=on: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(camera.off_a) :=
+	case
+		camera.MachineState=on & next(camera.MachineState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(camera.takephoto_a) :=
+	case
+		camera.MachineState=on & next(camera.MachineState)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		camera.takephoto_a = TRUE & (camera.trust_MachineState_takingphoto=trusted): trusted;
+		camera.takephoto_a = TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(camera.trust_MachineState_off) := camera.trust_MachineState_off;
+
+	next(camera.trust_MachineState_on) := camera.trust_MachineState_on;
+
+	next(camera.trust_MachineState_takingphoto) := camera.trust_MachineState_takingphoto;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		camera.takephoto_a = TRUE: camera.privacy_photo;
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=3 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=3);

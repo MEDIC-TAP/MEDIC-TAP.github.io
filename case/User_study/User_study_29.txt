@@ -1,0 +1,7 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Weather.weather = windy THEN Window.close & Door.lock
+IF Temperature Sensor.temperature < 10 THEN Window.close
+IF Smoke Sensor.smoke = detected THEN Window.open
+IF Car.location = garage THEN Garage Door.open

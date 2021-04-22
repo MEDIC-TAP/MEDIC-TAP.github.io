@@ -1,0 +1,10 @@
+IF Temperature Sensor.temperature > 20 THEN Air Conditioner.off
+IF Weather.weather = sunny & Motion Detector.motion = active THEN Window.open
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Door RFID.RFID = not authorized THEN Door.lock
+IF Motion Detector.motion = inactive THEN Door.lock
+IF Weather.weather = rainy THEN Swimming Pool Water Pump.off
+IF Weather.weather = snowy THEN Swimming Pool Water Pump.off
+IF Weather.weather = stormy THEN Swimming Pool Water Pump.off
+IF Temperature Sensor.temperature > 28 THEN Sprinkler Controller.open
+IF Motion Detector.motion = inactive THEN Light.off

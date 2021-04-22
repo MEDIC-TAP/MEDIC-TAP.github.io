@@ -1,0 +1,246 @@
+--IF Weather.weather = windy THEN Window.close
+--IF Car.location = garage THEN Garage Door.open
+--IF Smoke Sensor.smoke = detected THEN Window.open
+--IF Weather.weather = windy THEN Door.lock
+--IF Temperature Sensor.temperature < 10 THEN Window.close
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE Window
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE Car
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):= trusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):= untrusted;
+
+MODULE GarageDoor
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Door
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	window: Window;
+	temperaturesensor: TemperatureSensor;
+	car: Car;
+	smokesensor: SmokeSensor;
+	garagedoor: GarageDoor;
+	door: Door;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_smoke: {clear, detected, tested};
+ASSIGN
+	next(window.WindowState) :=
+	case
+		weather.weather=windy: closed;
+		smokesensor.smoke=detected: open;
+		temperaturesensor.temperature<10: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(garagedoor.DoorState) :=
+	case
+		car.location=garage: open;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		weather.weather=windy: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	weather.weather := a_weather;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	temperaturesensor.temperature := a_temperature;
+
+	next(car.location) :=
+	case
+		TRUE: {garage, away};
+	esac;
+
+	smokesensor.smoke := a_smoke;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		temperaturesensor.temperature<10 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature<10: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted);
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted);

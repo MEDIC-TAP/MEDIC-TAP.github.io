@@ -1,0 +1,121 @@
+--IF Motion Detector.motion = active THEN Door.lock
+--IF Clock.time = 20 THEN Door.lock
+
+MODULE MotionDetector
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	motiondetector: MotionDetector;
+	clock: Clock;
+	door: Door;
+	a_motion: {active, inactive};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(motiondetector.is_attack) + toint(clock.is_attack) + toint(door.is_attack);
+
+	next(door.LockState) :=
+	case
+		motiondetector.motion=active & door.is_attack=FALSE: locked;
+		clock.time=20 & door.is_attack=FALSE: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	motiondetector.motion:=
+	case
+		motiondetector.is_attack=TRUE: {active, inactive};
+		TRUE: a_motion;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=1 & door.is_attack=FALSE);

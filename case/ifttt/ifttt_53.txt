@@ -1,0 +1,25 @@
+IF Home Mode.Mode = home THEN Online Bank.transfer money
+IF Door.LockState = locked THEN Light.on
+IF Clock.time = 6 THEN Email.send mail
+IF Car.location = garage THEN Sina Weibo.post
+IF Clock.time = 20 THEN Light.off
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Home Mode.Mode = home THEN Light.on
+IF Weather.weather = windy THEN Light.on
+IF Clock.time = 19 THEN Camera.take photo
+IF Calendar.date = weekdays THEN Online Bank.transfer money
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Motion Detector.motion = inactive THEN Alarm.both
+IF Motion Detector.motion = active THEN Camera.off
+IF Temperature Sensor.temperature < 10 THEN Light.on
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Calendar.date = weekend THEN Email.send mail
+IF Alarm.AlertState = both THEN Camera.take photo
+IF Sina Weibo.State = posting THEN Light.off
+IF Email.State = sending THEN Email.send mail
+IF Email.receiveMail = receive THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Sina Weibo.post
+IF Mobile Phone.location = home THEN Light.on
+IF Humidity Sensor.humidity < 30 THEN Light.on
+IF Clock.time = 20 THEN Air Conditioner.cool
+IF Clock.time = 19 THEN Email.send mail

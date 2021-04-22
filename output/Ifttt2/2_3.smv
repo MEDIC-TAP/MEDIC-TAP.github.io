@@ -1,0 +1,238 @@
+--IF Clock.time = 20 THEN Sina Weibo.post
+--IF Home Mode.Mode = away THEN Sina Weibo.post
+--IF Calendar.date = weekend THEN Sina Weibo.post
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Calendar
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_season):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE HomeMode
+FROZENVAR
+	is_attack: boolean;
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	calendar: Calendar;
+	clock: Clock;
+	homemode: HomeMode;
+	a_date: {weekdays, weekend, MothersDay};
+	a_season: {spring, summer, autumn, winter};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(calendar.is_attack) + toint(clock.is_attack) + toint(homemode.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		clock.time=20 & sinaweibo.is_attack=FALSE: posting;
+		homemode.Mode=away & sinaweibo.is_attack=FALSE: posting;
+		calendar.date=weekend & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	calendar.date:=
+	case
+		calendar.is_attack=TRUE: {weekdays, weekend, MothersDay};
+		TRUE: a_date;
+	esac;
+
+	calendar.season:=
+	case
+		calendar.is_attack=TRUE: {spring, summer, autumn, winter};
+		TRUE: a_season;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		homemode.Mode=away & (homemode.trust_Mode_away=trusted): trusted;
+		homemode.Mode=away: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=2 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=2);

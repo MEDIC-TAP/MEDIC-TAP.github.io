@@ -1,0 +1,218 @@
+--IF Online Bank.State = transfering THEN Sina Weibo.post
+--IF Calendar.date = MothersDay THEN Sina Weibo.post
+--IF Clock.time = 20 THEN Sina Weibo.post
+--IF Sina Weibo.State = posting THEN Online Bank.transfer money
+--IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+--IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+--IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE Calendar
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):= trusted;
+	init(trust_season):= trusted;
+
+MODULE HumiditySensor
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):= untrusted;
+
+MODULE RefrigeratorDoorSensor
+FROZENVAR
+	trust_contact: {untrusted, trusted};
+VAR
+	contact: {closed, open};
+ASSIGN
+	init(trust_contact):= untrusted;
+
+MODULE OnlineBank
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	sinaweibo: SinaWeibo;
+	temperaturesensor: TemperatureSensor;
+	calendar: Calendar;
+	humiditysensor: HumiditySensor;
+	refrigeratordoorsensor: RefrigeratorDoorSensor;
+	onlinebank: OnlineBank;
+	clock: Clock;
+	a_date: {weekdays, weekend, MothersDay};
+	a_temperature: 0..100;
+	a_season: {spring, summer, autumn, winter};
+	a_humidity: 0..100;
+	a_time: 0..23;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		onlinebank.State=transfering: posting;
+		calendar.date=MothersDay: posting;
+		clock.time=20: posting;
+		humiditysensor.humidity>60: posting;
+		refrigeratordoorsensor.contact=open: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		sinaweibo.State=posting: transfering;
+		temperaturesensor.temperature>30: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100: {toint(a_humidity)-1, a_humidity};
+		a_humidity>100: {100};
+		a_humidity=0: {a_humidity, a_humidity+1};
+		a_humidity<0: {0};
+		TRUE: {a_humidity+-1, a_humidity, a_humidity+1};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	temperaturesensor.temperature := a_temperature;
+
+	calendar.date := a_date;
+
+	calendar.season := a_season;
+
+	humiditysensor.humidity := a_humidity;
+
+	next(refrigeratordoorsensor.contact) :=
+	case
+		TRUE: {closed, open};
+	esac;
+
+	clock.time := a_time;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		onlinebank.State=transfering & (onlinebank.trust_State_transfering=trusted): trusted;
+		onlinebank.State=transfering: untrusted;
+		calendar.date=MothersDay & (calendar.trust_date=trusted): trusted;
+		calendar.date=MothersDay: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		humiditysensor.humidity>60 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>60: untrusted;
+		refrigeratordoorsensor.contact=open & (refrigeratordoorsensor.trust_contact=trusted): trusted;
+		refrigeratordoorsensor.contact=open: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

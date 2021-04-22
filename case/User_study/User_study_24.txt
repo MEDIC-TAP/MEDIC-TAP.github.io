@@ -1,0 +1,6 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Car.location = garage THEN Garage Door.open
+IF Motion Detector.motion = inactive THEN TV.off
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Temperature Sensor.temperature > 16 THEN Air Conditioner.off
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat

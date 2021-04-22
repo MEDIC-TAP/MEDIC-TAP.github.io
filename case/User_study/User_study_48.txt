@@ -1,0 +1,6 @@
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Smoke Sensor.smoke = detected THEN Ventilator.on
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Car.location = garage THEN Garage Door.open

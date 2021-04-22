@@ -1,0 +1,7 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 5 THEN Air Conditioner.heat
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Illuminance Sensor.illuminance < 30 THEN Window Shade.open
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Clock.time = 7 THEN Coffee Maker.on
+IF Clock.time = 20 THEN Washer Machine.run

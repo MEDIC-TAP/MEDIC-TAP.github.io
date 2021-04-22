@@ -1,0 +1,19 @@
+IF Sina Weibo.State = posting THEN Air Purifier.on
+IF Temperature Sensor.temperature < 10 THEN Light.off
+IF Home Mode.Mode = home THEN Light.off
+IF Weather.weather = windy THEN Sprinkler Controller.close
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Clock.time = 19 THEN Online Bank.transfer money
+IF Email.State = sending THEN Sina Weibo.post
+IF Email.State = sending THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.auto
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Calendar.date = weekend THEN Light.off
+IF Clock.time = 6 THEN Coffee Maker.on
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Water Heater.MachineState = off THEN Light.off
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Humidity Sensor.humidity > 60 THEN Humidifier.on
+IF Home Mode.Mode = home THEN Light.on
+IF Email.receiveMail = receive THEN Sina Weibo.post
+IF Clock.time = 19 THEN Sina Weibo.post

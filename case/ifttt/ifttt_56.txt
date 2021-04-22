@@ -1,0 +1,7 @@
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Weather.weather = rainy THEN Email.send mail
+IF Home Mode.Mode = away THEN Light.off
+IF Weather.weather = windy THEN Email.send mail
+IF Calendar.date = MothersDay THEN Light.off
+IF Air Conditioner.HvacMode = fanOnly THEN Email.send mail
+IF Electricity Meter Sensor.power > 70 THEN Email.send mail

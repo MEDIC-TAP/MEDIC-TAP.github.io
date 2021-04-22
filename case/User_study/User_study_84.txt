@@ -1,0 +1,12 @@
+IF Gas Sensor.gas > 20 THEN Alarm.both
+IF Gas Sensor.gas > 20 THEN Window.open
+IF Air Quality Monitor.airQuality > 16 THEN Air Purifier.on
+IF Motion Detector.motion = active THEN TV.on
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Swimming Pool Water Quality Sensor.waterQuality > 20 THEN Swimming Pool Water Pump.on
+IF Window.closed THEN Light.on
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Weather.weather = windy THEN Window.close
+IF Weather.weather = sunny THEN Window.open

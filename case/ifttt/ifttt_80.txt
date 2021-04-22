@@ -1,0 +1,12 @@
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+IF Home Mode.Mode = home THEN Light.off
+IF Clock.time = 20 THEN Camera.take photo
+IF Temperature Sensor.temperature > 30 THEN Sprinkler Controller.open
+IF Car.location = away THEN Garage Door.close
+IF Clock.time = 19 THEN Email.send mail
+IF Mobile Phone.location = home THEN Garage Door.open
+IF Sina Weibo.State = posting THEN Air Conditioner.off
+IF Motion Detector.motion = active THEN Email.send mail
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Clock.time = 19 THEN Sina Weibo.post

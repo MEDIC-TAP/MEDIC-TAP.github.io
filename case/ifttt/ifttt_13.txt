@@ -1,0 +1,21 @@
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open
+IF Mobile Phone.location = home THEN Light.on
+IF Clock.time = 20 THEN Oven.paused
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Calendar.date = weekdays THEN Email.send mail
+IF Clock.time = 6 THEN Light.on
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Clock.time = 20 THEN Camera.on
+IF Home Mode.Mode = away THEN Light.off
+IF Clock.time = 19 THEN Air Conditioner.off
+IF Clock.time = 19 THEN Camera.take photo
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Electricity Meter Sensor.power > 70 THEN Email.send mail
+IF Sina Weibo.State = posting THEN Air Purifier.on
+IF Clock.time = 20 THEN Light.off
+IF Clock.time = 6 THEN Email.send mail
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money
+IF Car.location = garage THEN Sina Weibo.post

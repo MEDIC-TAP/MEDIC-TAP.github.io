@@ -1,0 +1,20 @@
+IF Light.SwitchState = off THEN Light.on
+IF Water Heater.MachineState = off THEN Light.off
+IF Calendar.date = weekend THEN Camera.on
+IF Home Mode.Mode = home THEN Light.off
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Car.location = garage THEN Light.on
+IF Weather.weather = windy THEN Alarm.both
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Home Mode.Mode = away THEN Light.on
+IF Air Conditioner.HvacMode = off THEN Light.off
+IF Calendar.date = weekend THEN Light.off
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Door.LockState = locked THEN Email.send mail
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Calendar.date = weekdays THEN Online Bank.transfer money
+IF Weather.weather = windy THEN Sprinkler Controller.close
+IF Motion Detector.motion = active THEN Light.off

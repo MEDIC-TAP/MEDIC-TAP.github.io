@@ -1,0 +1,7 @@
+IF Illuminance Sensor.illuminance < 30 THEN Window Shade.open
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Illuminance Sensor.illuminance > 90 THEN Light.off
+IF Mobile Phone.location != home & Door.LockState = unlocked THEN Door.lock

@@ -1,0 +1,14 @@
+IF Alarm.AlertState = both THEN Email.send mail
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Clock.time = 6 THEN Light.off
+IF Clock.time = 19 THEN Light.off
+IF Door.LockState = locked THEN Email.send mail
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Home Mode.Mode = away THEN Humidifier.on
+IF Clock.time = 19 THEN Light.on
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Motion Detector.motion = active THEN Email.send mail

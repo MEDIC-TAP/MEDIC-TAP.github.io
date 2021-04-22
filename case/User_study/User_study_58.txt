@@ -1,0 +1,6 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Smoke Sensor.smoke = detected THEN Ventilator.on

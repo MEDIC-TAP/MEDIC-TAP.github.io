@@ -1,0 +1,244 @@
+--IF Mobile Phone.location = home THEN Garage Door.open
+--IF Car.location = away THEN Garage Door.close
+--IF Clock.time = 20 THEN Door.lock
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE MobilePhone
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {on, takingphoto, uploadingtocloud};
+	takephoto_a: boolean;
+	uploadtocloud_a: boolean;
+	location: {home, away, garageDoor, Shanghai};
+	steps: 0..100;
+	trust_location: {trusted};
+	trust_steps: {trusted};
+	trust_State_on: {untrusted, trusted};
+	trust_State_takingphoto: {untrusted, trusted};
+	trust_State_uploadingtocloud: {untrusted, trusted};
+	privacy_photo: {private};
+	privacy_steps: {public};
+	privacy_location: {public};
+ASSIGN
+	init(State) := on;
+	init(takephoto_a) := FALSE;
+	init(uploadtocloud_a) := FALSE;
+	init(trust_State_on) := trusted;
+	init(trust_State_takingphoto) := trusted;
+	init(trust_State_uploadingtocloud) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	car: Car;
+	garagedoor: GarageDoor;
+	clock: Clock;
+	mobilephone: MobilePhone;
+	door: Door;
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(car.is_attack) + toint(garagedoor.is_attack) + toint(clock.is_attack) + toint(mobilephone.is_attack) + toint(door.is_attack);
+
+	next(garagedoor.DoorState) :=
+	case
+		mobilephone.location=home & garagedoor.is_attack=FALSE: open;
+		car.location=away & garagedoor.is_attack=FALSE: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(mobilephone.State) :=
+	case
+		mobilephone.State=takingphoto: on;
+		mobilephone.State=uploadingtocloud: on;
+		mobilephone.State=on: {on, takingphoto, uploadingtocloud};
+		mobilephone.State=takingphoto: {takingphoto};
+		mobilephone.State=uploadingtocloud: {uploadingtocloud};
+		TRUE: mobilephone.State;
+	esac;
+
+	next(door.LockState) :=
+	case
+		clock.time=20 & door.is_attack=FALSE: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(mobilephone.location) :=
+	case
+		TRUE: {home, away, garageDoor, Shanghai};
+	esac;
+
+	next(mobilephone.steps) :=
+	case
+		mobilephone.steps>=100: {100};
+		mobilephone.steps=0: {mobilephone.steps, mobilephone.steps+1};
+		mobilephone.steps<0: {0};
+		TRUE: {mobilephone.steps, mobilephone.steps+1};
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.takephoto_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.uploadtocloud_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=uploadingtocloud: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		car.location=away & (car.trust_location=trusted): trusted;
+		car.location=away: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		mobilephone.location=home & (mobilephone.trust_location=trusted): trusted;
+		mobilephone.location=home: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(mobilephone.trust_State_on) := mobilephone.trust_State_on;
+
+	next(mobilephone.trust_State_takingphoto) := mobilephone.trust_State_takingphoto;
+
+	next(mobilephone.trust_State_uploadingtocloud) := mobilephone.trust_State_uploadingtocloud;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=3 & door.is_attack=FALSE);

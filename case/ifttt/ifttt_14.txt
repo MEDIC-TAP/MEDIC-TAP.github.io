@@ -1,0 +1,26 @@
+IF Online Bank.State = transfering THEN Email.send mail
+IF Door.LockState = locked THEN Light.off
+IF Email.receiveMail = receive THEN Alarm.both
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Calendar.date = weekdays THEN Email.send mail
+IF Car.location = away THEN Garage Door.close
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Calendar.date = weekend THEN Light.off
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Online Bank.State = transfering THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Alarm.off
+IF Door.LockState = unlocked THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Electricity Meter Sensor.power > 70 THEN Email.send mail
+IF Home Mode.Mode = away THEN Camera.on
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Clock.time = 20 THEN Sina Weibo.post
+IF Home Mode.Mode = away THEN Light.off
+IF Motion Detector.motion = active THEN Email.send mail
+IF Clock.time = 19 THEN Light.on

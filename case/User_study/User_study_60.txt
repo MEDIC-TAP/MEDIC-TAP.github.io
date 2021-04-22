@@ -1,0 +1,10 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Gas Sensor.gas >= 10 THEN Alarm.both
+IF Alarm.AlertState = both THEN Ventilator.on
+IF Smoke Sensor.smoke = detected THEN Home Mode.send alert message
+IF Gas Sensor.gas >= 10 THEN Home Mode.send alert message
+IF Motion Detector.motion = inactive THEN Door.lock
+IF Motion Detector.motion = inactive THEN Window.close
+IF Door RFID.RFID = not authorized THEN Door.lock
+IF Motion Detector.motion = inactive THEN Light.off

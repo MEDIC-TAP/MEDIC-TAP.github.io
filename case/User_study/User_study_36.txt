@@ -1,0 +1,6 @@
+IF Mobile Phone.location = home THEN Door.unlock
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Cooker.on THEN Range Hood.on
+IF Clock.time = 18 & Motion Detector.motion = active THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Window.open
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on

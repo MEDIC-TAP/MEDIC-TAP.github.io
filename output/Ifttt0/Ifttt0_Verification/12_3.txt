@@ -1,0 +1,29 @@
+-- specification AG !(sinaweibo.State = posting & sinaweibo.trust_State_posting = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  weather.trust_weather = untrusted
+  calendar.trust_date = trusted
+  calendar.trust_season = trusted
+  weather.weather = cloudy
+  sinaweibo.State = idle
+  sinaweibo.post_a = FALSE
+  sinaweibo.trust_State_idle = trusted
+  sinaweibo.trust_State_posting = trusted
+  sinaweibo.privacy_content = public
+  calendar.date = weekend
+  calendar.season = winter
+  a_date = weekend
+  a_weather = cloudy
+  a_season = winter
+-> State: 1.2 <-
+  weather.weather = rainy
+  sinaweibo.State = posting
+  sinaweibo.post_a = TRUE
+  a_weather = rainy
+-> State: 1.3 <-
+  weather.weather = cloudy
+  sinaweibo.post_a = FALSE
+  sinaweibo.trust_State_posting = untrusted
+  a_weather = cloudy

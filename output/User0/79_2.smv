@@ -1,0 +1,107 @@
+--IF Motion Detector.motion = active & Clock.time = 20 THEN Water Heater.on
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE WaterHeater
+VAR
+	MachineState: {off, on};
+	on_a: boolean;
+	off_a: boolean;
+	waterTemperature: 0..100;
+	waterTemperature_rate: -1..1;
+	trust_waterTemperature: {untrusted};
+	trust_MachineState_off: {untrusted, trusted};
+	trust_MachineState_on: {untrusted, trusted};
+ASSIGN
+	init(MachineState) := on;
+	init(on_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_MachineState_off) := trusted;
+	init(trust_MachineState_on) := trusted;
+
+MODULE Clock
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):= trusted;
+
+MODULE main
+VAR
+	motiondetector: MotionDetector;
+	waterheater: WaterHeater;
+	clock: Clock;
+	a_motion: {active, inactive};
+	a_time: 0..23;
+ASSIGN
+	next(waterheater.MachineState) :=
+	case
+		motiondetector.motion=active & clock.time=20: on;
+		waterheater.MachineState=off: {off, on};
+		waterheater.MachineState=on: {off, on};
+		TRUE: waterheater.MachineState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	motiondetector.motion := a_motion;
+
+	next(waterheater.waterTemperature) :=
+	case
+		waterheater.waterTemperature=100-(waterheater.waterTemperature_rate): {toint(waterheater.waterTemperature)-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature>100-(waterheater.waterTemperature_rate): {100};
+		waterheater.waterTemperature=0-(waterheater.waterTemperature_rate): {waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature<0-(waterheater.waterTemperature_rate): {0};
+		TRUE: {waterheater.waterTemperature+-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+	esac;
+
+	clock.time := a_time;
+
+	next(waterheater.waterTemperature_rate) :=
+	case
+		waterheater.MachineState=on: 1;
+		TRUE: 0;
+	esac;
+
+	next(waterheater.on_a) :=
+	case
+		waterheater.MachineState!=on & next(waterheater.MachineState)=on: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.off_a) :=
+	case
+		waterheater.MachineState!=off & next(waterheater.MachineState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.trust_MachineState_off) :=
+	case
+		TRUE: waterheater.trust_MachineState_off;
+	esac;
+
+	next(waterheater.trust_MachineState_on) :=
+	case
+		motiondetector.motion=active & clock.time=20 & (motiondetector.trust_motion=trusted | clock.trust_time=trusted): trusted;
+		motiondetector.motion=active & clock.time=20: untrusted;
+		TRUE: waterheater.trust_MachineState_on;
+	esac;
+
+SPEC AG !(waterheater.MachineState=on & waterheater.trust_MachineState_on=untrusted);

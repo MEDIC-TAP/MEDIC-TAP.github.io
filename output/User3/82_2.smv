@@ -1,0 +1,79 @@
+--IF Water Heater.waterTemperature > 50 THEN Water Heater.off
+
+MODULE WaterHeater
+FROZENVAR
+	is_attack: boolean;
+VAR
+	MachineState: {off, on};
+	on_a: boolean;
+	off_a: boolean;
+	waterTemperature: 0..100;
+	waterTemperature_rate: -1..1;
+	trust_waterTemperature: {untrusted};
+	trust_MachineState_off: {untrusted, trusted};
+	trust_MachineState_on: {untrusted, trusted};
+ASSIGN
+	init(MachineState) := on;
+	init(on_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_MachineState_off) := trusted;
+	init(trust_MachineState_on) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	waterheater: WaterHeater;
+ASSIGN
+	init(intensity) := 0 + toint(waterheater.is_attack);
+
+	next(waterheater.MachineState) :=
+	case
+		waterheater.waterTemperature>50 & waterheater.is_attack=FALSE: off;
+		waterheater.MachineState=off: {off, on};
+		waterheater.MachineState=on: {off, on};
+		TRUE: waterheater.MachineState;
+	esac;
+
+	next(waterheater.waterTemperature) :=
+	case
+		waterheater.waterTemperature=100-(waterheater.waterTemperature_rate): {toint(waterheater.waterTemperature)-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature>100-(waterheater.waterTemperature_rate): {100};
+		waterheater.waterTemperature=0-(waterheater.waterTemperature_rate): {waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature<0-(waterheater.waterTemperature_rate): {0};
+		TRUE: {waterheater.waterTemperature+-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+	esac;
+
+	next(waterheater.waterTemperature_rate) :=
+	case
+		waterheater.MachineState=on: 1;
+		TRUE: 0;
+	esac;
+
+	next(waterheater.on_a) :=
+	case
+		waterheater.MachineState!=on & next(waterheater.MachineState)=on: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.off_a) :=
+	case
+		waterheater.MachineState!=off & next(waterheater.MachineState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.trust_MachineState_off) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		waterheater.waterTemperature>50 & (waterheater.trust_waterTemperature=trusted): trusted;
+		waterheater.waterTemperature>50: untrusted;
+		TRUE: waterheater.trust_MachineState_off;
+	esac;
+
+	next(waterheater.trust_MachineState_on) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		TRUE: waterheater.trust_MachineState_on;
+	esac;
+
+SPEC AG !(waterheater.MachineState=on & waterheater.trust_MachineState_on=untrusted & intensity<=3 & waterheater.is_attack=FALSE);

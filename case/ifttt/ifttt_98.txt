@@ -1,0 +1,14 @@
+IF Clock.time = 20 THEN Camera.off
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Weather.weather = windy THEN Sprinkler Controller.close
+IF Alarm.AlertState = both THEN Light.on
+IF Email.State = sending THEN Sina Weibo.post
+IF Email.State = sending THEN Light.on
+IF Weather.weather = windy THEN Email.send mail
+IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Email.receiveMail = receive THEN Light.on
+IF Clock.time = 20 THEN Camera.on
+IF Alarm.AlertState = both THEN Alarm.both
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Clock.time = 19 THEN Online Bank.transfer money

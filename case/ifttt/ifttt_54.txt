@@ -1,0 +1,16 @@
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Door.LockState = unlocked THEN Camera.on
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Light.SwitchState = on THEN Light.on
+IF Clock.time = 20 THEN Email.send mail
+IF Motion Detector.motion = active THEN Door.lock
+IF Calendar.date = MothersDay THEN Light.off
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+IF Humidity Sensor.humidity > 60 THEN Online Bank.transfer money
+IF Humidity Sensor.humidity < 30 THEN Email.send mail
+IF Home Mode.Mode = home THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Weather.weather = windy THEN Sprinkler Controller.close
+IF Humidity Sensor.humidity > 60 THEN Humidifier.on

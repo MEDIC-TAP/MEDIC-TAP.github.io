@@ -1,0 +1,10 @@
+IF Temperature Sensor.temperature < 26 THEN Air Conditioner.off
+IF Air Conditioner.off & Motion Detector.motion = active THEN Window.open
+IF Temperature Sensor.temperature > 28 THEN Sprinkler Controller.open
+IF Swimming Pool Water Quality Sensor.waterQuality > 20 THEN Swimming Pool Water Pump.on
+IF Weather.weather = rainy THEN Swimming Pool Water Pump.off
+IF Soil Moisture Sensor.water = wet THEN Sprinkler Controller.close
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Weather.weather = snowy THEN Swimming Pool Water Pump.off
+IF Weather.weather = rainy THEN Sprinkler Controller.close
+IF Weather.weather = snowy THEN Sprinkler Controller.close

@@ -1,0 +1,6 @@
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Car.location = garage THEN Garage Door.open
+IF Swimming Pool Water Quality Sensor.waterQuality < 30 THEN Swimming Pool Water Pump.on

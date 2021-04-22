@@ -1,0 +1,9 @@
+IF Clock.time = 19 THEN Online Bank.transfer money
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Email.receiveMail = receive THEN Alarm.both
+IF Clock.time = 20 THEN Door.lock
+IF Home Mode.Mode = away THEN Light.on
+IF Light.SwitchState = off THEN Light.on
+IF Home Mode.Mode = away THEN Email.send mail
+IF Motion Detector.motion = active THEN Alarm.both
+IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post

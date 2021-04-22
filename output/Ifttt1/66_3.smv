@@ -1,0 +1,235 @@
+--IF Online Bank.State = transfering THEN Sina Weibo.post
+--IF Home Mode.Mode = home THEN Online Bank.transfer money
+--IF Humidity Sensor.humidity > 60 THEN Online Bank.transfer money
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE HumiditySensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE OnlineBank
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE HomeMode
+FROZENVAR
+	is_attack: boolean;
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	humiditysensor: HumiditySensor;
+	onlinebank: OnlineBank;
+	homemode: HomeMode;
+	a_humidity: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(humiditysensor.is_attack) + toint(onlinebank.is_attack) + toint(homemode.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		onlinebank.State=transfering & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		homemode.Mode=home & onlinebank.is_attack=FALSE: transfering;
+		humiditysensor.humidity>60 & onlinebank.is_attack=FALSE: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100: {toint(a_humidity)-1, a_humidity};
+		a_humidity>100: {100};
+		a_humidity=0: {a_humidity, a_humidity+1};
+		a_humidity<0: {0};
+		TRUE: {a_humidity+-1, a_humidity, a_humidity+1};
+	esac;
+
+	humiditysensor.humidity:=
+	case
+		humiditysensor.is_attack=TRUE: 0..100;
+		TRUE: a_humidity;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		onlinebank.State=transfering & (onlinebank.trust_State_transfering=trusted): trusted;
+		onlinebank.State=transfering: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		homemode.Mode=home & (homemode.trust_Mode_home=trusted): trusted;
+		homemode.Mode=home: untrusted;
+		humiditysensor.humidity>60 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>60: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=1 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=1);

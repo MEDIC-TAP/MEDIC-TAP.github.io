@@ -1,0 +1,6 @@
+IF Temperature Sensor.temperature > 30 & Motion Detector.motion = active THEN Air Conditioner.cool
+IF Gas Sensor.gas > 60 THEN Alarm.both
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Swimming Pool Water Quality Sensor.waterQuality > 60 THEN Swimming Pool Water Pump.on
+IF Home Mode.Mode = sleep THEN Window.close & Light.off & TV.off
+IF Sina Weibo.post THEN Twitter.post(Sina Weibo.content)

@@ -1,0 +1,7 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Car.location = garage THEN Garage Door.open
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Mobile Phone.location != home THEN Door.lock
+IF Illuminance Sensor.illuminance < 30 THEN Light.on

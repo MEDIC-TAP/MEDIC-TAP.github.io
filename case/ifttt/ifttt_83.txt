@@ -1,0 +1,29 @@
+IF Calendar.date = MothersDay THEN Light.off
+IF Online Bank.State = transfering THEN Sina Weibo.post
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Clock.time = 20 THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Weather.weather = windy THEN Email.send mail
+IF Email.receiveMail = receive THEN Email.send mail
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Home Mode.Mode = away THEN Garage Door.close
+IF Motion Detector.motion = inactive THEN Email.send mail
+IF Light.SwitchState = on THEN Light.on
+IF Email.State = sending THEN Light.off
+IF Online Bank.State = transfering THEN Email.send mail
+IF Air Conditioner.HvacMode = fanOnly THEN Email.send mail
+IF Home Mode.Mode = home THEN Light.off
+IF Calendar.date = weekend THEN Camera.on
+IF Alarm.AlertState = both THEN Alarm.both
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Email.receiveMail = receive THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Calendar.date = weekend THEN Air Conditioner.auto
+IF Door.LockState = unlocked THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Email.send mail
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Smoke Sensor.smoke = detected THEN Email.send mail
+IF Clock.time = 20 THEN Oven.paused
+IF Alarm.AlertState = both THEN Camera.take photo
+IF Light.SwitchState = on THEN Light.off
+IF Home Mode.Mode = away THEN Camera.on

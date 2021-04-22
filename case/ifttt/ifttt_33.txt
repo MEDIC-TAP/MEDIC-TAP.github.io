@@ -1,0 +1,14 @@
+IF Smoke Sensor.smoke = detected THEN Oven.paused
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Light.SwitchState = off THEN Light.on
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Clock.time = 19 THEN Online Bank.transfer money
+IF Home Mode.Mode = away THEN Camera.on
+IF Clock.time = 6 THEN Light.off
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Clock.time = 20 THEN Water Heater.on
+IF Motion Detector.motion = active THEN Alarm.both
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Motion Detector.motion = active THEN Sina Weibo.post

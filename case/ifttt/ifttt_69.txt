@@ -1,0 +1,17 @@
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Camera.on
+IF Motion Detector.motion = active THEN Camera.off
+IF Water Heater.MachineState = off THEN Light.off
+IF Weather.weather = windy THEN Garage Door.close
+IF Home Mode.Mode = home THEN Light.on
+IF Dryer.MachineState = stop THEN Email.send mail
+IF Calendar.date = weekdays THEN Email.send mail
+IF Door.LockState = unlocked THEN Light.on
+IF Calendar.date = weekend THEN Camera.on
+IF Clock.time = 6 THEN Light.off
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Smoke Sensor.smoke = detected THEN Camera.take photo & Email.send mail
+IF Home Mode.Mode = away THEN Camera.on
+IF Weather.weather = windy THEN Sina Weibo.post
+IF Car.location = garage THEN Light.on

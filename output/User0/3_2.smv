@@ -1,0 +1,67 @@
+--IF Gas Sensor.gas > 60 THEN Online Bank.transfer money
+
+MODULE GasSensor
+FROZENVAR
+	trust_gas: {untrusted, trusted};
+VAR
+	gas: 0..100;
+ASSIGN
+	init(trust_gas):= untrusted;
+
+MODULE OnlineBank
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE main
+VAR
+	gassensor: GasSensor;
+	onlinebank: OnlineBank;
+	a_gas: 0..100;
+ASSIGN
+	next(onlinebank.State) :=
+	case
+		gassensor.gas>60: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(a_gas) :=
+	case
+		a_gas=100: {toint(a_gas)-1, a_gas};
+		a_gas>100: {100};
+		a_gas=0: {a_gas, a_gas+1};
+		a_gas<0: {0};
+		TRUE: {a_gas+-1, a_gas, a_gas+1};
+	esac;
+
+	gassensor.gas := a_gas;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		gassensor.gas>60 & (gassensor.trust_gas=trusted): trusted;
+		gassensor.gas>60: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted);

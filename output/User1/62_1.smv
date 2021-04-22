@@ -1,0 +1,404 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+--IF Weather.weather = windy THEN Window.close
+--IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+--IF Air Conditioner.heat THEN Window.close
+--IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+--IF Air Conditioner.cool THEN Window.close
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE DoorRFID
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE AirConditioner
+FROZENVAR
+	is_attack: boolean;
+VAR
+	HvacMode: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+	auto_a: boolean;
+	cool_a: boolean;
+	dry_a: boolean;
+	coolClean_a: boolean;
+	dryClean_a: boolean;
+	fanOnly_a: boolean;
+	heat_a: boolean;
+	heatClean_a: boolean;
+	off_a: boolean;
+	temperature_rate: -1..1;
+	humidity_rate: -1..1;
+	trust_HvacMode_auto: {untrusted, trusted};
+	trust_HvacMode_cool: {untrusted, trusted};
+	trust_HvacMode_coolClean: {untrusted, trusted};
+	trust_HvacMode_dry: {untrusted, trusted};
+	trust_HvacMode_dryClean: {untrusted, trusted};
+	trust_HvacMode_fanOnly: {untrusted, trusted};
+	trust_HvacMode_heat: {untrusted, trusted};
+	trust_HvacMode_heatClean: {untrusted, trusted};
+	trust_HvacMode_off: {untrusted, trusted};
+ASSIGN
+	init(HvacMode) := auto;
+	init(auto_a) := FALSE;
+	init(cool_a) := FALSE;
+	init(dry_a) := FALSE;
+	init(coolClean_a) := FALSE;
+	init(dryClean_a) := FALSE;
+	init(fanOnly_a) := FALSE;
+	init(heat_a) := FALSE;
+	init(heatClean_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_HvacMode_auto) := trusted;
+	init(trust_HvacMode_cool) := trusted;
+	init(trust_HvacMode_dry) := trusted;
+	init(trust_HvacMode_coolClean) := trusted;
+	init(trust_HvacMode_dryClean) := trusted;
+	init(trust_HvacMode_fanOnly) := trusted;
+	init(trust_HvacMode_heat) := trusted;
+	init(trust_HvacMode_heatClean) := trusted;
+	init(trust_HvacMode_off) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	window: Window;
+	temperaturesensor: TemperatureSensor;
+	doorrfid: DoorRFID;
+	airconditioner: AirConditioner;
+	door: Door;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(window.is_attack) + toint(temperaturesensor.is_attack) + toint(doorrfid.is_attack) + toint(airconditioner.is_attack) + toint(door.is_attack);
+
+	next(window.WindowState) :=
+	case
+		weather.weather=windy & window.is_attack=FALSE: closed;
+		airconditioner.heat_a = TRUE & window.is_attack=FALSE: closed;
+		airconditioner.cool_a = TRUE & window.is_attack=FALSE: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(airconditioner.HvacMode) :=
+	case
+		temperaturesensor.temperature<10 & airconditioner.is_attack=FALSE: heat;
+		temperaturesensor.temperature>30 & airconditioner.is_attack=FALSE: cool;
+		airconditioner.HvacMode=auto: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=cool: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=coolClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dry: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dryClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=fanOnly: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heat: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heatClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=off: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		TRUE: airconditioner.HvacMode;
+	esac;
+
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized & door.is_attack=FALSE: unlocked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100-(airconditioner.temperature_rate): {toint(a_temperature)-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate};
+		a_temperature>100-(airconditioner.temperature_rate): {100};
+		a_temperature=0-(airconditioner.temperature_rate): {a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+		a_temperature<0-(airconditioner.temperature_rate): {0};
+		TRUE: {a_temperature+-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	next(doorrfid.RFID) :=
+	case
+		doorrfid.is_attack=TRUE: {authorized, notauthorized};
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	next(airconditioner.temperature_rate) :=
+	case
+		airconditioner.HvacMode=cool: -1;
+		airconditioner.HvacMode=coolClean: -1;
+		airconditioner.HvacMode=heat: 1;
+		airconditioner.HvacMode=heatClean: 1;
+		TRUE: 0;
+	esac;
+
+	next(airconditioner.humidity_rate) :=
+	case
+		airconditioner.HvacMode=dry: -1;
+		airconditioner.HvacMode=dryClean: -1;
+		airconditioner.HvacMode=heat: -1;
+		TRUE: 0;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.auto_a) :=
+	case
+		airconditioner.HvacMode!=auto & next(airconditioner.HvacMode)=auto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.cool_a) :=
+	case
+		airconditioner.HvacMode!=cool & next(airconditioner.HvacMode)=cool: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dry_a) :=
+	case
+		airconditioner.HvacMode!=dry & next(airconditioner.HvacMode)=dry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.coolClean_a) :=
+	case
+		airconditioner.HvacMode!=coolClean & next(airconditioner.HvacMode)=coolClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dryClean_a) :=
+	case
+		airconditioner.HvacMode!=dryClean & next(airconditioner.HvacMode)=dryClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.fanOnly_a) :=
+	case
+		airconditioner.HvacMode!=fanOnly & next(airconditioner.HvacMode)=fanOnly: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heat_a) :=
+	case
+		airconditioner.HvacMode!=heat & next(airconditioner.HvacMode)=heat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heatClean_a) :=
+	case
+		airconditioner.HvacMode!=heatClean & next(airconditioner.HvacMode)=heatClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.off_a) :=
+	case
+		airconditioner.HvacMode!=off & next(airconditioner.HvacMode)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		airconditioner.heat_a = TRUE & (airconditioner.trust_HvacMode_heat=trusted): trusted;
+		airconditioner.heat_a = TRUE: untrusted;
+		airconditioner.cool_a = TRUE & (airconditioner.trust_HvacMode_cool=trusted): trusted;
+		airconditioner.cool_a = TRUE: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(airconditioner.trust_HvacMode_auto) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_auto;
+	esac;
+
+	next(airconditioner.trust_HvacMode_cool) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: airconditioner.trust_HvacMode_cool;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dry) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dry;
+	esac;
+
+	next(airconditioner.trust_HvacMode_coolClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_coolClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dryClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dryClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_fanOnly) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_fanOnly;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heat) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		temperaturesensor.temperature<10 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature<10: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heat;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heatClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heatClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_off) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_off;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=1 & door.is_attack=FALSE);

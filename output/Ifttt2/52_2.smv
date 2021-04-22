@@ -1,0 +1,497 @@
+--IF Calendar.date = MothersDay THEN Sina Weibo.post
+--IF Sina Weibo.State = posting THEN Air Conditioner.auto
+--IF Clock.time = 19 THEN Online Bank.transfer money
+--IF Washer Machine.MachineState = stop THEN Sina Weibo.post
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE AirConditioner
+FROZENVAR
+	is_attack: boolean;
+VAR
+	HvacMode: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+	auto_a: boolean;
+	cool_a: boolean;
+	dry_a: boolean;
+	coolClean_a: boolean;
+	dryClean_a: boolean;
+	fanOnly_a: boolean;
+	heat_a: boolean;
+	heatClean_a: boolean;
+	off_a: boolean;
+	temperature_rate: -1..1;
+	humidity_rate: -1..1;
+	trust_HvacMode_auto: {untrusted, trusted};
+	trust_HvacMode_cool: {untrusted, trusted};
+	trust_HvacMode_coolClean: {untrusted, trusted};
+	trust_HvacMode_dry: {untrusted, trusted};
+	trust_HvacMode_dryClean: {untrusted, trusted};
+	trust_HvacMode_fanOnly: {untrusted, trusted};
+	trust_HvacMode_heat: {untrusted, trusted};
+	trust_HvacMode_heatClean: {untrusted, trusted};
+	trust_HvacMode_off: {untrusted, trusted};
+ASSIGN
+	init(HvacMode) := auto;
+	init(auto_a) := FALSE;
+	init(cool_a) := FALSE;
+	init(dry_a) := FALSE;
+	init(coolClean_a) := FALSE;
+	init(dryClean_a) := FALSE;
+	init(fanOnly_a) := FALSE;
+	init(heat_a) := FALSE;
+	init(heatClean_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_HvacMode_auto) := trusted;
+	init(trust_HvacMode_cool) := trusted;
+	init(trust_HvacMode_dry) := trusted;
+	init(trust_HvacMode_coolClean) := trusted;
+	init(trust_HvacMode_dryClean) := trusted;
+	init(trust_HvacMode_fanOnly) := trusted;
+	init(trust_HvacMode_heat) := trusted;
+	init(trust_HvacMode_heatClean) := trusted;
+	init(trust_HvacMode_off) := trusted;
+
+MODULE Calendar
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_season):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE OnlineBank
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE WasherMachine
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WasherMode: {heavy, regular, rinse, spinDry};
+	MachineState: {pause, run, stop};
+	regular_a: boolean;
+	heavy_a: boolean;
+	rinse_a: boolean;
+	spinDry_a: boolean;
+	pause_a: boolean;
+	run_a: boolean;
+	stop_a: boolean;
+	washerJobState: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	trust_washerJobState: {untrusted};
+	trust_WasherMode_heavy: {untrusted, trusted};
+	trust_WasherMode_regular: {untrusted, trusted};
+	trust_WasherMode_rinse: {untrusted, trusted};
+	trust_WasherMode_spinDry: {untrusted, trusted};
+	trust_MachineState_pause: {untrusted, trusted};
+	trust_MachineState_run: {untrusted, trusted};
+	trust_MachineState_stop: {untrusted, trusted};
+ASSIGN
+	init(WasherMode) := regular;
+	init(MachineState) := pause;
+	init(regular_a) := FALSE;
+	init(heavy_a) := FALSE;
+	init(rinse_a) := FALSE;
+	init(spinDry_a) := FALSE;
+	init(pause_a) := FALSE;
+	init(run_a) := FALSE;
+	init(stop_a) := FALSE;
+	init(trust_WasherMode_regular) := trusted;
+	init(trust_MachineState_pause) := trusted;
+	init(trust_MachineState_run) := trusted;
+	init(trust_MachineState_stop) := trusted;
+	init(trust_WasherMode_heavy) := trusted;
+	init(trust_WasherMode_rinse) := trusted;
+	init(trust_WasherMode_spinDry) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	airconditioner: AirConditioner;
+	calendar: Calendar;
+	clock: Clock;
+	onlinebank: OnlineBank;
+	washermachine: WasherMachine;
+	a_date: {weekdays, weekend, MothersDay};
+	a_season: {spring, summer, autumn, winter};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(airconditioner.is_attack) + toint(calendar.is_attack) + toint(clock.is_attack) + toint(onlinebank.is_attack) + toint(washermachine.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		calendar.date=MothersDay & sinaweibo.is_attack=FALSE: posting;
+		washermachine.MachineState=stop & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(airconditioner.HvacMode) :=
+	case
+		sinaweibo.State=posting & airconditioner.is_attack=FALSE: auto;
+		airconditioner.HvacMode=auto: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=cool: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=coolClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dry: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dryClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=fanOnly: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heat: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heatClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=off: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		TRUE: airconditioner.HvacMode;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		clock.time=19 & onlinebank.is_attack=FALSE: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(washermachine.WasherMode) :=
+	case
+		washermachine.WasherMode=heavy: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=regular: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=rinse: {heavy, regular, rinse, spinDry};
+		washermachine.WasherMode=spinDry: {heavy, regular, rinse, spinDry};
+		TRUE: washermachine.WasherMode;
+	esac;
+
+	next(washermachine.MachineState) :=
+	case
+		washermachine.MachineState=pause: {pause, run, stop};
+		washermachine.MachineState=run: {pause, run, stop};
+		washermachine.MachineState=stop: {pause, run, stop};
+		TRUE: washermachine.MachineState;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	calendar.date:=
+	case
+		calendar.is_attack=TRUE: {weekdays, weekend, MothersDay};
+		TRUE: a_date;
+	esac;
+
+	calendar.season:=
+	case
+		calendar.is_attack=TRUE: {spring, summer, autumn, winter};
+		TRUE: a_season;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(washermachine.washerJobState) :=
+	case
+		TRUE: {airWash, cooling, delayWash, drying, finish, none, preWash, rinse, spin, wash, weightSensing, wrinklePrevent};
+	esac;
+
+	next(airconditioner.temperature_rate) :=
+	case
+		airconditioner.HvacMode=cool: -1;
+		airconditioner.HvacMode=coolClean: -1;
+		airconditioner.HvacMode=heat: 1;
+		airconditioner.HvacMode=heatClean: 1;
+		TRUE: 0;
+	esac;
+
+	next(airconditioner.humidity_rate) :=
+	case
+		airconditioner.HvacMode=dry: -1;
+		airconditioner.HvacMode=dryClean: -1;
+		airconditioner.HvacMode=heat: -1;
+		TRUE: 0;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.auto_a) :=
+	case
+		airconditioner.HvacMode!=auto & next(airconditioner.HvacMode)=auto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.cool_a) :=
+	case
+		airconditioner.HvacMode!=cool & next(airconditioner.HvacMode)=cool: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dry_a) :=
+	case
+		airconditioner.HvacMode!=dry & next(airconditioner.HvacMode)=dry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.coolClean_a) :=
+	case
+		airconditioner.HvacMode!=coolClean & next(airconditioner.HvacMode)=coolClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dryClean_a) :=
+	case
+		airconditioner.HvacMode!=dryClean & next(airconditioner.HvacMode)=dryClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.fanOnly_a) :=
+	case
+		airconditioner.HvacMode!=fanOnly & next(airconditioner.HvacMode)=fanOnly: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heat_a) :=
+	case
+		airconditioner.HvacMode!=heat & next(airconditioner.HvacMode)=heat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heatClean_a) :=
+	case
+		airconditioner.HvacMode!=heatClean & next(airconditioner.HvacMode)=heatClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.off_a) :=
+	case
+		airconditioner.HvacMode!=off & next(airconditioner.HvacMode)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.regular_a) :=
+	case
+		washermachine.WasherMode!=regular & next(washermachine.WasherMode)=regular: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.heavy_a) :=
+	case
+		washermachine.WasherMode!=heavy & next(washermachine.WasherMode)=heavy: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.rinse_a) :=
+	case
+		washermachine.WasherMode!=rinse & next(washermachine.WasherMode)=rinse: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.spinDry_a) :=
+	case
+		washermachine.WasherMode!=spinDry & next(washermachine.WasherMode)=spinDry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.pause_a) :=
+	case
+		washermachine.MachineState!=pause & next(washermachine.MachineState)=pause: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.run_a) :=
+	case
+		washermachine.MachineState!=run & next(washermachine.MachineState)=run: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(washermachine.stop_a) :=
+	case
+		washermachine.MachineState!=stop & next(washermachine.MachineState)=stop: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		calendar.date=MothersDay & (calendar.trust_date=trusted): trusted;
+		calendar.date=MothersDay: untrusted;
+		washermachine.MachineState=stop & (washermachine.trust_MachineState_stop=trusted): trusted;
+		washermachine.MachineState=stop: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(airconditioner.trust_HvacMode_auto) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		TRUE: airconditioner.trust_HvacMode_auto;
+	esac;
+
+	next(airconditioner.trust_HvacMode_cool) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_cool;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dry) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dry;
+	esac;
+
+	next(airconditioner.trust_HvacMode_coolClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_coolClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dryClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dryClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_fanOnly) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_fanOnly;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heat) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heat;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heatClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heatClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_off) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_off;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+	next(washermachine.trust_WasherMode_heavy) := washermachine.trust_WasherMode_heavy;
+
+	next(washermachine.trust_WasherMode_regular) := washermachine.trust_WasherMode_regular;
+
+	next(washermachine.trust_WasherMode_rinse) := washermachine.trust_WasherMode_rinse;
+
+	next(washermachine.trust_WasherMode_spinDry) := washermachine.trust_WasherMode_spinDry;
+
+	next(washermachine.trust_MachineState_pause) := washermachine.trust_MachineState_pause;
+
+	next(washermachine.trust_MachineState_run) := washermachine.trust_MachineState_run;
+
+	next(washermachine.trust_MachineState_stop) := washermachine.trust_MachineState_stop;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(airconditioner.HvacMode=cool & airconditioner.trust_HvacMode_cool=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(airconditioner.HvacMode=heat & airconditioner.trust_HvacMode_heat=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(airconditioner.HvacMode=auto & airconditioner.trust_HvacMode_auto=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted & intensity<=2 & onlinebank.is_attack=FALSE);

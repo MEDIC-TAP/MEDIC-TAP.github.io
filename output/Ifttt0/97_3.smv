@@ -1,0 +1,164 @@
+--IF Weather.weather = windy THEN Sina Weibo.post
+--IF Alarm.AlertState = both THEN Sina Weibo.post
+--IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE SinaWeibo
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE Alarm
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	sinaweibo: SinaWeibo;
+	temperaturesensor: TemperatureSensor;
+	alarm: Alarm;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+ASSIGN
+	next(sinaweibo.State) :=
+	case
+		weather.weather=windy: posting;
+		alarm.AlertState=both: posting;
+		temperaturesensor.temperature>30: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	weather.weather := a_weather;
+
+	temperaturesensor.temperature := a_temperature;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		alarm.AlertState=both & (alarm.trust_AlertState_both=trusted): trusted;
+		alarm.AlertState=both: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(alarm.trust_AlertState_both) := alarm.trust_AlertState_both;
+
+	next(alarm.trust_AlertState_off) := alarm.trust_AlertState_off;
+
+	next(alarm.trust_AlertState_siren) := alarm.trust_AlertState_siren;
+
+	next(alarm.trust_AlertState_strobe) := alarm.trust_AlertState_strobe;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted);
+SPEC AG !(sinaweibo.privacy_content=private);

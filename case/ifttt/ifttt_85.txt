@@ -1,0 +1,28 @@
+IF Email.State = sending THEN Sina Weibo.post
+IF Calendar.date = weekdays THEN Email.send mail
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Home Mode.Mode = away THEN Light.on
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Light.SwitchState = on THEN Light.off
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Alarm.AlertState = both THEN Email.send mail
+IF Motion Detector.motion = active THEN Garage Door.open
+IF Clock.time = 6 THEN Light.off
+IF Clock.time = 20 THEN Camera.on
+IF Temperature Sensor.temperature < 10 THEN Email.send mail
+IF Motion Detector.motion = active THEN Door.lock
+IF Weather.weather = windy THEN Sprinkler Controller.close
+IF Weather.weather = windy THEN Light.on
+IF Calendar.date = weekend THEN Email.send mail
+IF Clock.time = 20 THEN Sina Weibo.post
+IF Clock.time = 20 THEN Washer Machine.run
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Clock.time = 20 THEN Light.off
+IF Email.receiveMail = receive THEN Alarm.both
+IF Home Mode.Mode = away THEN Humidifier.on
+IF Sina Weibo.State = posting THEN Light.off
+IF Email.State = sending THEN Email.send mail
+IF Mobile Phone.location = home THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Camera.take photo & Email.send mail

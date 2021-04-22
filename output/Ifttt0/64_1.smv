@@ -1,0 +1,166 @@
+--IF Mobile Phone.location = home THEN Garage Door.open
+--IF Weather.weather = windy THEN Garage Door.close
+--IF Car.location = away THEN Garage Door.close
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE Car
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):= trusted;
+
+MODULE GarageDoor
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE MobilePhone
+VAR
+	State: {on, takingphoto, uploadingtocloud};
+	takephoto_a: boolean;
+	uploadtocloud_a: boolean;
+	location: {home, away, garageDoor, Shanghai};
+	steps: 0..100;
+	trust_location: {trusted};
+	trust_steps: {trusted};
+	trust_State_on: {untrusted, trusted};
+	trust_State_takingphoto: {untrusted, trusted};
+	trust_State_uploadingtocloud: {untrusted, trusted};
+	privacy_photo: {private};
+	privacy_steps: {public};
+	privacy_location: {public};
+ASSIGN
+	init(State) := on;
+	init(takephoto_a) := FALSE;
+	init(uploadtocloud_a) := FALSE;
+	init(trust_State_on) := trusted;
+	init(trust_State_takingphoto) := trusted;
+	init(trust_State_uploadingtocloud) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	car: Car;
+	garagedoor: GarageDoor;
+	mobilephone: MobilePhone;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	next(garagedoor.DoorState) :=
+	case
+		mobilephone.location=home: open;
+		weather.weather=windy: closed;
+		car.location=away: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(mobilephone.State) :=
+	case
+		mobilephone.State=takingphoto: on;
+		mobilephone.State=uploadingtocloud: on;
+		mobilephone.State=on: {on, takingphoto, uploadingtocloud};
+		mobilephone.State=takingphoto: {takingphoto};
+		mobilephone.State=uploadingtocloud: {uploadingtocloud};
+		TRUE: mobilephone.State;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	weather.weather := a_weather;
+
+	next(car.location) :=
+	case
+		TRUE: {garage, away};
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(mobilephone.location) :=
+	case
+		TRUE: {home, away, garageDoor, Shanghai};
+	esac;
+
+	next(mobilephone.steps) :=
+	case
+		mobilephone.steps>=100: {100};
+		mobilephone.steps=0: {mobilephone.steps, mobilephone.steps+1};
+		mobilephone.steps<0: {0};
+		TRUE: {mobilephone.steps, mobilephone.steps+1};
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.takephoto_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.uploadtocloud_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=uploadingtocloud: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		car.location=away & (car.trust_location=trusted): trusted;
+		car.location=away: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		mobilephone.location=home & (mobilephone.trust_location=trusted): trusted;
+		mobilephone.location=home: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(mobilephone.trust_State_on) := mobilephone.trust_State_on;
+
+	next(mobilephone.trust_State_takingphoto) := mobilephone.trust_State_takingphoto;
+
+	next(mobilephone.trust_State_uploadingtocloud) := mobilephone.trust_State_uploadingtocloud;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted);

@@ -1,0 +1,5 @@
+IF Motion Detector.motion = active THEN Water Heater.on
+IF Gas Sensor.gas > 60 THEN Window.open
+IF Motion Detector.motion = active THEN TV.on 
+IF Smoke Sensor.smoke = detected THEN Alarm.both & Window.open
+IF Temperature Sensor.temperature > 30 THEN Swimming Pool Water Pump.on

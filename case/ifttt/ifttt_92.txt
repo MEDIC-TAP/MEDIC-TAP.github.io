@@ -1,0 +1,5 @@
+IF Email.receiveMail = receive THEN Email.send mail
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Clock.time = 20 THEN Garage Door.close
+IF Clock.time = 20 THEN Door.lock
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open

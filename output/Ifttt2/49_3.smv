@@ -1,0 +1,262 @@
+--IF Temperature Sensor.temperature < 10 THEN Sina Weibo.post
+--IF Clock.time = 19 THEN Sina Weibo.post
+--IF Air Quality Monitor.airQuality > 70 THEN Sina Weibo.post
+--IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+--IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SinaWeibo_1
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE HumiditySensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	temperaturesensor: TemperatureSensor;
+	sinaweibo: SinaWeibo;
+	airqualitymonitor: AirQualityMonitor;
+	sinaweibo_1: SinaWeibo_1;
+	humiditysensor: HumiditySensor;
+	clock: Clock;
+	a_airQuality: 0..100;
+	a_temperature: 0..100;
+	a_carbonDioxide: 0..100;
+	a_humidity: 0..100;
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(temperaturesensor.is_attack) + toint(sinaweibo.is_attack) + toint(airqualitymonitor.is_attack) + toint(sinaweibo_1.is_attack) + toint(humiditysensor.is_attack) + toint(clock.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		temperaturesensor.temperature<10 & sinaweibo.is_attack=FALSE: posting;
+		clock.time=19 & sinaweibo.is_attack=FALSE: posting;
+		airqualitymonitor.airQuality>70 & sinaweibo.is_attack=FALSE: posting;
+		humiditysensor.humidity>60 & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo_1.State=posting & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(sinaweibo_1.State) :=
+	case
+		sinaweibo_1.State=posting: idle;
+		sinaweibo_1.State=idle: {idle, posting};
+		sinaweibo_1.State=posting: {posting};
+		TRUE: sinaweibo_1.State;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100: {toint(a_humidity)-1, a_humidity};
+		a_humidity>100: {100};
+		a_humidity=0: {a_humidity, a_humidity+1};
+		a_humidity<0: {0};
+		TRUE: {a_humidity+-1, a_humidity, a_humidity+1};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	humiditysensor.humidity:=
+	case
+		humiditysensor.is_attack=TRUE: 0..100;
+		TRUE: a_humidity;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo_1.post_a) :=
+	case
+		sinaweibo_1.State=idle & next(sinaweibo_1.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		temperaturesensor.temperature<10 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature<10: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		airqualitymonitor.airQuality>70 & (airqualitymonitor.trust_airQuality=trusted): trusted;
+		airqualitymonitor.airQuality>70: untrusted;
+		humiditysensor.humidity>60 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>60: untrusted;
+		sinaweibo_1.State=posting & (sinaweibo_1.trust_State_posting=trusted): trusted;
+		sinaweibo_1.State=posting: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(sinaweibo_1.trust_State_idle) := sinaweibo_1.trust_State_idle;
+
+	next(sinaweibo_1.trust_State_posting) := sinaweibo_1.trust_State_posting;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+	next(sinaweibo_1.privacy_content) := sinaweibo_1.privacy_content;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=2 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=2);
+SPEC AG !(sinaweibo_1.State=posting & sinaweibo_1.trust_State_posting=untrusted & intensity<=2 & sinaweibo_1.is_attack=FALSE);
+SPEC AG !(sinaweibo_1.privacy_content=private & intensity<=2);

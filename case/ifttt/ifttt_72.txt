@@ -1,0 +1,12 @@
+IF Email.State = sending THEN Email.send mail
+IF Calendar.date = MothersDay THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Clock.time = 20 THEN Camera.take photo
+IF Car.location = garage THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Email.send mail
+IF Clock.time = 20 THEN Light.on
+IF Calendar.date = weekend THEN Camera.on
+IF Clock.time = 20 THEN Water Heater.off
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Motion Detector.motion = active THEN Alarm.both
+IF Sina Weibo.State = posting THEN Air Conditioner.auto

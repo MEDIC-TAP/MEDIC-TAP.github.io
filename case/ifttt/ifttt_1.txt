@@ -1,0 +1,7 @@
+IF Temperature Sensor.temperature > 30 THEN Email.send mail
+IF Clock.time = 6 THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Oven.paused
+IF Calendar.date = weekend THEN Camera.off
+IF Calendar.date = weekend THEN Email.send mail
+IF Weather.weather = windy THEN Alarm.both
+IF Motion Detector.motion = active THEN Door.lock

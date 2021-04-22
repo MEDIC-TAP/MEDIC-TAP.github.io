@@ -1,0 +1,5 @@
+IF Weather.weather = rainy THEN Window.close
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Swimming Pool Water Quality Sensor.waterQuality < 30 THEN Swimming Pool Water Pump.on
+IF Temperature Sensor.temperature < 20 THEN Air Conditioner.heat

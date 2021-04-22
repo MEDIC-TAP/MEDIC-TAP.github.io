@@ -1,0 +1,23 @@
+IF Temperature Sensor.temperature < 10 THEN Light.on
+IF Weather.weather = windy THEN Light.on
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Temperature Sensor.temperature > 30 THEN Light.on
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Clock.time = 6 THEN Email.send mail
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Motion Detector.motion = active THEN Alarm.off
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money
+IF Door.LockState = locked THEN Light.off
+IF Clock.time = 20 THEN Washer Machine.run
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Calendar.date = weekend THEN Air Conditioner.auto
+IF Clock.time = 20 THEN Camera.take photo
+IF Light.SwitchState = off THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Email.send mail
+IF Air Conditioner.HvacMode = fanOnly THEN Email.send mail
+IF Dryer.MachineState = stop THEN Sina Weibo.post
+IF Email.receiveMail = receive THEN Sina Weibo.post
+IF Humidity Sensor.humidity > 60 THEN Light.off
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Smoke Sensor.smoke = detected THEN Light.on

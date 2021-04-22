@@ -1,0 +1,230 @@
+--IF Weather.weather = windy THEN Window.close
+--IF Weather.weather = rainy THEN Window.close
+--IF Temperature Sensor.temperature < 15 THEN Window.close
+--IF Weather.weather = sunny & Air Quality Monitor.airQuality < 10 THEN Window.open
+--IF Weather.weather = foggy THEN Window.close
+--IF Weather.weather = snowy THEN Window.close
+--IF Motion Detector.motion = inactive THEN Door.lock
+--IF Temperature Sensor.temperature > 28 THEN Window.open
+--IF Motion Detector.motion = active THEN Window.open
+
+MODULE Weather
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):= untrusted;
+
+MODULE Window
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE TemperatureSensor
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):= untrusted;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):= untrusted;
+	init(trust_carbonDioxide):= untrusted;
+
+MODULE Door
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+VAR
+	weather: Weather;
+	window: Window;
+	motiondetector: MotionDetector;
+	temperaturesensor: TemperatureSensor;
+	airqualitymonitor: AirQualityMonitor;
+	door: Door;
+	a_airQuality: 0..100;
+	a_motion: {active, inactive};
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_carbonDioxide: 0..100;
+ASSIGN
+	next(window.WindowState) :=
+	case
+		weather.weather=windy: closed;
+		weather.weather=rainy: closed;
+		temperaturesensor.temperature<15: closed;
+		weather.weather=sunny & airqualitymonitor.airQuality<10: open;
+		weather.weather=foggy: closed;
+		weather.weather=snowy: closed;
+		temperaturesensor.temperature>28: open;
+		motiondetector.motion=active: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		motiondetector.motion=inactive: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100: {toint(a_temperature)-1, a_temperature};
+		a_temperature>100: {100};
+		a_temperature=0: {a_temperature, a_temperature+1};
+		a_temperature<0: {0};
+		TRUE: {a_temperature+-1, a_temperature, a_temperature+1};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	weather.weather := a_weather;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	motiondetector.motion := a_motion;
+
+	temperaturesensor.temperature := a_temperature;
+
+	airqualitymonitor.airQuality := a_airQuality;
+
+	airqualitymonitor.carbonDioxide := a_carbonDioxide;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		temperaturesensor.temperature<15 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature<15: untrusted;
+		weather.weather=foggy & (weather.trust_weather=trusted): trusted;
+		weather.weather=foggy: untrusted;
+		weather.weather=snowy & (weather.trust_weather=trusted): trusted;
+		weather.weather=snowy: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		weather.weather=sunny & airqualitymonitor.airQuality<10 & (weather.trust_weather=trusted | airqualitymonitor.trust_airQuality=trusted): trusted;
+		weather.weather=sunny & airqualitymonitor.airQuality<10: untrusted;
+		temperaturesensor.temperature>28 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>28: untrusted;
+		motiondetector.motion=active & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=active: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		motiondetector.motion=inactive & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=inactive: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted);

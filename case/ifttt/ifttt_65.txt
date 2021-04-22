@@ -1,0 +1,15 @@
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+IF Dryer.MachineState = stop THEN Email.send mail
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Mobile Phone.location = home THEN Garage Door.open
+IF Online Bank.State = transfering THEN Email.send mail
+IF Temperature Sensor.temperature > 30 THEN Thermostat.off
+IF Motion Detector.motion = active THEN Alarm.off
+IF Clock.time = 6 THEN Light.on
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Home Mode.Mode = away THEN Garage Door.close
+IF Calendar.date = weekend THEN Camera.on
+IF Clock.time = 20 THEN Camera.off
+IF Calendar.date = weekdays THEN Email.send mail
+IF Sina Weibo.State = posting THEN Air Conditioner.auto

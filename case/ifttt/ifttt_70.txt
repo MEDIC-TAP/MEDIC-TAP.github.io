@@ -1,0 +1,28 @@
+IF Temperature Sensor.temperature > 30 THEN Thermostat.off
+IF Calendar.date = weekend THEN Light.on
+IF Home Mode.Mode = home THEN Online Bank.transfer money
+IF Air Quality Monitor.airQuality > 70 THEN Light.on
+IF Motion Detector.motion = active THEN Alarm.both
+IF Email.State = sending THEN Light.off
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Calendar.date = weekend THEN Camera.off
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Weather.weather = windy THEN Light.on
+IF Door.LockState = unlocked THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Refrigerator Door Sensor.contact = open THEN Light.on
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Calendar.date = MothersDay THEN Light.on
+IF Calendar.date = weekend THEN Air Conditioner.off
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.auto
+IF Motion Detector.motion = inactive THEN Light.off
+IF Door.LockState = unlocked THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Motion Detector.motion = active THEN Sprinkler Controller.close
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Temperature Sensor.temperature > 30 THEN Sprinkler Controller.open
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post

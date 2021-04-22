@@ -1,0 +1,8 @@
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Humidity Sensor.humidity > 60 THEN Humidifier.off
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Car.location = garage THEN Garage Door.open
+IF Temperature Sensor.temperature < 20 THEN Window.open
+IF Temperature Sensor.temperature > 35 & Motion Detector.motion = active THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 & Motion Detector.motion = active THEN Air Conditioner.heat

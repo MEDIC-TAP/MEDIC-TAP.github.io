@@ -1,0 +1,12 @@
+IF Gas Sensor.gas > 80 THEN Window.open
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Gas Sensor.gas > 70 THEN Alarm.both
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Swimming Pool Water Quality Sensor.waterQuality < 30 THEN Swimming Pool Water Pump.on
+IF Illuminance Sensor.illuminance < 30 & Motion Detector.motion = active THEN Light.on
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Door RFID.RFID = authorized THEN Door.unlock

@@ -1,0 +1,25 @@
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on
+IF Email.State = sending THEN Light.on
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+IF Clock.time = 6 THEN Email.send mail
+IF Email.receiveMail = receive THEN Alarm.both
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Smoke Sensor.smoke = detected THEN Light.on
+IF Motion Detector.motion = active THEN Light.on
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Home Mode.Mode = away THEN Garage Door.close
+IF Clock.time = 20 THEN Light.on
+IF Car.location = garage THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Clock.time = 19 THEN Email.send mail
+IF Door.LockState = unlocked THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.auto
+IF Smoke Sensor.smoke = detected THEN Oven.paused
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Air Quality Monitor.airQuality > 70 THEN Online Bank.transfer money
+IF Door.LockState = locked THEN Light.off
+IF Air Quality Monitor.carbonDioxide > 70 THEN Email.send mail
+IF Humidity Sensor.humidity < 30 THEN Light.on
+IF Sina Weibo.State = posting THEN Camera.on
+IF Humidity Sensor.humidity > 60 THEN Light.off

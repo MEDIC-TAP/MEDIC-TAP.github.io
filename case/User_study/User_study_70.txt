@@ -1,0 +1,10 @@
+IF Gas Sensor.gas > 16 THEN Alarm.both
+IF Illuminance Sensor.illuminance < 10 THEN Light.on
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Weather.weather = foggy THEN Window.close
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Weather.weather = windy THEN Window.close
+IF Weather.weather = rainy THEN Window.close
+IF Camera.off THEN Door.lock
+IF Weather.weather = rainy THEN TV.off

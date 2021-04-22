@@ -1,0 +1,20 @@
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Alarm.off
+IF Motion Detector.motion = active THEN Light.on
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Clock.time = 20 THEN Washer Machine.run
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Smoke Sensor.smoke = detected THEN Email.send mail
+IF Motion Detector.motion = active THEN Alarm.both
+IF Motion Detector.motion = active THEN Door.lock
+IF Car.location = garage THEN Light.on
+IF Clock.time = 20 THEN Oven.paused
+IF Air Conditioner.HvacMode = fanOnly THEN Email.send mail
+IF Home Mode.Mode = away THEN Email.send mail
+IF Home Mode.Mode = home THEN Light.off
+IF Sina Weibo.State = posting THEN Sina Weibo.post
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Calendar.date = MothersDay THEN Light.off
+IF Clock.time = 20 THEN Light.on
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open

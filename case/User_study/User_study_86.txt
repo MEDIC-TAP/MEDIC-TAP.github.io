@@ -1,0 +1,10 @@
+IF Motion Detector.motion = active THEN Light.on
+IF Weather.weather = sunny THEN Window.open
+IF Weather.weather = rainy THEN Window.close
+IF Weather.weather = snowy THEN Air Conditioner.heat
+IF Weather.weather = cloudy THEN Light.on
+IF Weather.weather = windy THEN Humidifier.on
+IF Illuminance Sensor.illuminance < 10 THEN Light.on
+IF Swimming Pool Water Quality Sensor.waterQuality > 20 THEN Swimming Pool Water Pump.on
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Weather.weather = rainy THEN Sprinkler Controller.close

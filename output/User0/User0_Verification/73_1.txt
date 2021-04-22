@@ -1,0 +1,19 @@
+-- specification AG !(window.WindowState = open & window.trust_WindowState_open = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  humiditysensor.trust_humidity = untrusted
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  humiditysensor.humidity = 63
+  a_humidity = 63
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted

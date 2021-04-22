@@ -1,0 +1,7 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 15 THEN Air Conditioner.heat
+IF Motion Detector.motion = active THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Swimming Pool Water Quality Sensor.waterQuality < 30 THEN Swimming Pool Water Pump.on
+IF Humidity Sensor.humidity > 60 THEN Window.open
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool

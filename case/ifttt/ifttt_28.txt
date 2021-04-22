@@ -1,0 +1,17 @@
+IF Smoke Sensor.smoke = detected THEN Light.on
+IF Motion Detector.motion = active THEN Camera.on
+IF Door.LockState = unlocked THEN Camera.on
+IF Calendar.date = MothersDay THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Camera.take photo & Email.send mail
+IF Water Heater.MachineState = off THEN Light.off
+IF Clock.time = 20 THEN Washer Machine.run
+IF Car.location = away THEN Light.off
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Light.SwitchState = off THEN Light.on
+IF Calendar.date = weekend THEN Camera.off
+IF Dryer.MachineState = stop THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Alarm.AlertState = both THEN Light.on
+IF Temperature Sensor.temperature < 10 THEN Email.send mail

@@ -1,0 +1,583 @@
+--IF Sina Weibo.State = posting THEN Sina Weibo.post
+--IF Clock.time = 20 THEN Air Conditioner.cool
+--IF Clock.time = 19 THEN Email.send mail
+--IF Email.receiveMail = receive THEN Sina Weibo.post
+--IF Clock.time = 20 THEN Air Conditioner.off
+--IF Sina Weibo.State = posting THEN Online Bank.transfer money
+--IF Clock.time = 6 THEN Email.send mail
+--IF Calendar.date = weekend THEN Sina Weibo.post
+--IF Home Mode.Mode = home THEN Online Bank.transfer money
+--IF Calendar.date = weekdays THEN Online Bank.transfer money
+--IF Calendar.date = weekend THEN Email.send mail
+--IF Car.location = garage THEN Sina Weibo.post
+--IF Email.State = sending THEN Email.send mail
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Email
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE AirConditioner
+FROZENVAR
+	is_attack: boolean;
+VAR
+	HvacMode: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+	auto_a: boolean;
+	cool_a: boolean;
+	dry_a: boolean;
+	coolClean_a: boolean;
+	dryClean_a: boolean;
+	fanOnly_a: boolean;
+	heat_a: boolean;
+	heatClean_a: boolean;
+	off_a: boolean;
+	temperature_rate: -1..1;
+	humidity_rate: -1..1;
+	trust_HvacMode_auto: {untrusted, trusted};
+	trust_HvacMode_cool: {untrusted, trusted};
+	trust_HvacMode_coolClean: {untrusted, trusted};
+	trust_HvacMode_dry: {untrusted, trusted};
+	trust_HvacMode_dryClean: {untrusted, trusted};
+	trust_HvacMode_fanOnly: {untrusted, trusted};
+	trust_HvacMode_heat: {untrusted, trusted};
+	trust_HvacMode_heatClean: {untrusted, trusted};
+	trust_HvacMode_off: {untrusted, trusted};
+ASSIGN
+	init(HvacMode) := auto;
+	init(auto_a) := FALSE;
+	init(cool_a) := FALSE;
+	init(dry_a) := FALSE;
+	init(coolClean_a) := FALSE;
+	init(dryClean_a) := FALSE;
+	init(fanOnly_a) := FALSE;
+	init(heat_a) := FALSE;
+	init(heatClean_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_HvacMode_auto) := trusted;
+	init(trust_HvacMode_cool) := trusted;
+	init(trust_HvacMode_dry) := trusted;
+	init(trust_HvacMode_coolClean) := trusted;
+	init(trust_HvacMode_dryClean) := trusted;
+	init(trust_HvacMode_fanOnly) := trusted;
+	init(trust_HvacMode_heat) := trusted;
+	init(trust_HvacMode_heatClean) := trusted;
+	init(trust_HvacMode_off) := trusted;
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Calendar
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_date: {untrusted, trusted};
+	trust_season: {untrusted, trusted};
+VAR
+	date: {weekdays, weekend, MothersDay};
+	season: {spring, summer, autumn, winter};
+ASSIGN
+	init(trust_date):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_season):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE OnlineBank
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE HomeMode
+FROZENVAR
+	is_attack: boolean;
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	email: Email;
+	airconditioner: AirConditioner;
+	car: Car;
+	calendar: Calendar;
+	clock: Clock;
+	onlinebank: OnlineBank;
+	homemode: HomeMode;
+	a_date: {weekdays, weekend, MothersDay};
+	a_season: {spring, summer, autumn, winter};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(email.is_attack) + toint(airconditioner.is_attack) + toint(car.is_attack) + toint(calendar.is_attack) + toint(clock.is_attack) + toint(onlinebank.is_attack) + toint(homemode.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		sinaweibo.State=posting & sinaweibo.is_attack=FALSE: posting;
+		email.receiveMail=receive & sinaweibo.is_attack=FALSE: posting;
+		calendar.date=weekend & sinaweibo.is_attack=FALSE: posting;
+		car.location=garage & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		clock.time=19 & email.is_attack=FALSE: sending;
+		clock.time=6 & email.is_attack=FALSE: sending;
+		calendar.date=weekend & email.is_attack=FALSE: sending;
+		email.State=sending & email.is_attack=FALSE: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(airconditioner.HvacMode) :=
+	case
+		clock.time=20 & airconditioner.is_attack=FALSE: cool;
+		clock.time=20 & airconditioner.is_attack=FALSE: off;
+		airconditioner.HvacMode=auto: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=cool: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=coolClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dry: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dryClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=fanOnly: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heat: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heatClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=off: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		TRUE: airconditioner.HvacMode;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		sinaweibo.State=posting & onlinebank.is_attack=FALSE: transfering;
+		homemode.Mode=home & onlinebank.is_attack=FALSE: transfering;
+		calendar.date=weekdays & onlinebank.is_attack=FALSE: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(a_date) :=
+	case
+		TRUE: {weekdays, weekend, MothersDay};
+	esac;
+
+	next(a_season) :=
+	case
+		TRUE: {spring, summer, autumn, winter};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	calendar.date:=
+	case
+		calendar.is_attack=TRUE: {weekdays, weekend, MothersDay};
+		TRUE: a_date;
+	esac;
+
+	calendar.season:=
+	case
+		calendar.is_attack=TRUE: {spring, summer, autumn, winter};
+		TRUE: a_season;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(airconditioner.temperature_rate) :=
+	case
+		airconditioner.HvacMode=cool: -1;
+		airconditioner.HvacMode=coolClean: -1;
+		airconditioner.HvacMode=heat: 1;
+		airconditioner.HvacMode=heatClean: 1;
+		TRUE: 0;
+	esac;
+
+	next(airconditioner.humidity_rate) :=
+	case
+		airconditioner.HvacMode=dry: -1;
+		airconditioner.HvacMode=dryClean: -1;
+		airconditioner.HvacMode=heat: -1;
+		TRUE: 0;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.auto_a) :=
+	case
+		airconditioner.HvacMode!=auto & next(airconditioner.HvacMode)=auto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.cool_a) :=
+	case
+		airconditioner.HvacMode!=cool & next(airconditioner.HvacMode)=cool: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dry_a) :=
+	case
+		airconditioner.HvacMode!=dry & next(airconditioner.HvacMode)=dry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.coolClean_a) :=
+	case
+		airconditioner.HvacMode!=coolClean & next(airconditioner.HvacMode)=coolClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dryClean_a) :=
+	case
+		airconditioner.HvacMode!=dryClean & next(airconditioner.HvacMode)=dryClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.fanOnly_a) :=
+	case
+		airconditioner.HvacMode!=fanOnly & next(airconditioner.HvacMode)=fanOnly: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heat_a) :=
+	case
+		airconditioner.HvacMode!=heat & next(airconditioner.HvacMode)=heat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heatClean_a) :=
+	case
+		airconditioner.HvacMode!=heatClean & next(airconditioner.HvacMode)=heatClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.off_a) :=
+	case
+		airconditioner.HvacMode!=off & next(airconditioner.HvacMode)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		email.receiveMail=receive & (email.trust_receiveMail=trusted): trusted;
+		email.receiveMail=receive: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		car.location=garage & (car.trust_location=trusted): trusted;
+		car.location=garage: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		clock.time=19 & (clock.trust_time=trusted): trusted;
+		clock.time=19: untrusted;
+		clock.time=6 & (clock.trust_time=trusted): trusted;
+		clock.time=6: untrusted;
+		calendar.date=weekend & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekend: untrusted;
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(airconditioner.trust_HvacMode_auto) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_auto;
+	esac;
+
+	next(airconditioner.trust_HvacMode_cool) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: airconditioner.trust_HvacMode_cool;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dry) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dry;
+	esac;
+
+	next(airconditioner.trust_HvacMode_coolClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_coolClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dryClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dryClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_fanOnly) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_fanOnly;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heat) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heat;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heatClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heatClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_off) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: airconditioner.trust_HvacMode_off;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		homemode.Mode=home & (homemode.trust_Mode_home=trusted): trusted;
+		homemode.Mode=home: untrusted;
+		calendar.date=weekdays & (calendar.trust_date=trusted): trusted;
+		calendar.date=weekdays: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(airconditioner.HvacMode=cool & airconditioner.trust_HvacMode_cool=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(airconditioner.HvacMode=heat & airconditioner.trust_HvacMode_heat=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(airconditioner.HvacMode=auto & airconditioner.trust_HvacMode_auto=untrusted & intensity<=2 & airconditioner.is_attack=FALSE);
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted & intensity<=2 & onlinebank.is_attack=FALSE);

@@ -1,0 +1,5 @@
+IF Motion Detector.motion = inactive THEN Light.off
+IF Temperature Sensor.temperature > 38 THEN Air Conditioner.cool & Window.close
+IF Motion Detector.motion = active & Illuminance Sensor.illuminance < 30 THEN Light.on
+IF Clock.time = 8 & Calendar.date = weekdays THEN Light.on
+IF Mobile Phone.steps > 80 THEN Sina Weibo.post(Mobile Phone.steps)

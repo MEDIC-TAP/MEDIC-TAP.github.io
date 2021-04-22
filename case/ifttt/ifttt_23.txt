@@ -1,0 +1,13 @@
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Sina Weibo.State = posting THEN Air Conditioner.auto
+IF Email.State = sending THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Light.on
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.auto
+IF Home Mode.Mode = home THEN Light.on
+IF Motion Detector.motion = active THEN Camera.on
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Dryer.MachineState = stop THEN Email.send mail
+IF Door.LockState = unlocked THEN Email.send mail
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Weather.weather = rainy THEN Email.send mail

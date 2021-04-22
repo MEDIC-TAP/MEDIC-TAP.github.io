@@ -1,0 +1,36 @@
+-- specification AG !(((sinaweibo.State = posting & sinaweibo.trust_State_posting = untrusted) & intensity <= 3) & sinaweibo.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 3
+  sinaweibo.is_attack = FALSE
+  temperaturesensor.is_attack = TRUE
+  temperaturesensor.trust_temperature = untrusted
+  calendar.is_attack = TRUE
+  calendar.trust_date = untrusted
+  calendar.trust_season = untrusted
+  onlinebank.is_attack = TRUE
+  sinaweibo.State = idle
+  sinaweibo.post_a = FALSE
+  sinaweibo.trust_State_idle = trusted
+  sinaweibo.trust_State_posting = trusted
+  sinaweibo.privacy_content = public
+  temperaturesensor.temperature = 0
+  calendar.date = weekdays
+  calendar.season = spring
+  onlinebank.State = idle
+  onlinebank.transfermoney_a = FALSE
+  onlinebank.trust_State_idle = trusted
+  onlinebank.trust_State_transfering = trusted
+  a_date = weekdays
+  a_temperature = 0
+  a_season = spring
+-> State: 1.2 <-
+  sinaweibo.State = posting
+  sinaweibo.post_a = TRUE
+  sinaweibo.trust_State_posting = untrusted
+  onlinebank.State = transfering
+  onlinebank.transfermoney_a = TRUE
+  onlinebank.trust_State_idle = untrusted
+  onlinebank.trust_State_transfering = untrusted

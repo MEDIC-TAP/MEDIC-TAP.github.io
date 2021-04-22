@@ -1,0 +1,13 @@
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close
+IF Door.LockState = unlocked THEN Light.on
+IF Sina Weibo.State = posting THEN Camera.on
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Door.lock
+IF Clock.time = 19 THEN Air Conditioner.off
+IF Weather.weather = windy THEN Light.on
+IF Email.receiveMail = receive THEN Online Bank.transfer money
+IF Clock.time = 6 THEN Coffee Maker.on
+IF Clock.time = 20 THEN Air Conditioner.auto
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.auto
+IF Clock.time = 6 THEN Light.off

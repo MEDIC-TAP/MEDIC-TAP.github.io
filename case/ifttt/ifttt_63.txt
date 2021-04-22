@@ -1,0 +1,23 @@
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Home Mode.Mode = away THEN Email.send mail
+IF Door.LockState = unlocked THEN Camera.on
+IF Calendar.date = weekend THEN Air Conditioner.off
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Light.SwitchState = on THEN Light.off
+IF Calendar.date = MothersDay THEN Email.send mail
+IF Humidity Sensor.humidity < 30 THEN Light.on
+IF Car.location = garage THEN Garage Door.open
+IF Sina Weibo.State = posting THEN Camera.on
+IF Smoke Sensor.smoke = detected THEN Email.send mail
+IF Clock.time = 20 THEN Water Heater.off
+IF Motion Detector.motion = active THEN Camera.on
+IF Refrigerator Door Sensor.contact = open THEN Sina Weibo.post
+IF Email.State = sending THEN Sina Weibo.post
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Calendar.date = weekend THEN Light.on
+IF Calendar.date = weekend THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Alarm.AlertState = both THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Sina Weibo.post
+IF Refrigerator Door Sensor.contact = open THEN Light.on

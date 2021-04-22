@@ -1,0 +1,129 @@
+--IF Mobile Phone.upload to cloud THEN Sina Weibo.post
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE MobilePhone
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {on, takingphoto, uploadingtocloud};
+	takephoto_a: boolean;
+	uploadtocloud_a: boolean;
+	location: {home, away, garageDoor, Shanghai};
+	steps: 0..100;
+	trust_location: {trusted};
+	trust_steps: {trusted};
+	trust_State_on: {untrusted, trusted};
+	trust_State_takingphoto: {untrusted, trusted};
+	trust_State_uploadingtocloud: {untrusted, trusted};
+	privacy_photo: {private};
+	privacy_steps: {public};
+	privacy_location: {public};
+ASSIGN
+	init(State) := on;
+	init(takephoto_a) := FALSE;
+	init(uploadtocloud_a) := FALSE;
+	init(trust_State_on) := trusted;
+	init(trust_State_takingphoto) := trusted;
+	init(trust_State_uploadingtocloud) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	mobilephone: MobilePhone;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(mobilephone.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		mobilephone.uploadtocloud_a = TRUE & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(mobilephone.State) :=
+	case
+		mobilephone.State=takingphoto: on;
+		mobilephone.State=uploadingtocloud: on;
+		mobilephone.State=on: {on, takingphoto, uploadingtocloud};
+		mobilephone.State=takingphoto: {takingphoto};
+		mobilephone.State=uploadingtocloud: {uploadingtocloud};
+		TRUE: mobilephone.State;
+	esac;
+
+	next(mobilephone.location) :=
+	case
+		TRUE: {home, away, garageDoor, Shanghai};
+	esac;
+
+	next(mobilephone.steps) :=
+	case
+		mobilephone.steps>=100: {100};
+		mobilephone.steps=0: {mobilephone.steps, mobilephone.steps+1};
+		mobilephone.steps<0: {0};
+		TRUE: {mobilephone.steps, mobilephone.steps+1};
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.takephoto_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.uploadtocloud_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=uploadingtocloud: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		mobilephone.uploadtocloud_a = TRUE & (mobilephone.trust_State_uploadingtocloud=trusted): trusted;
+		mobilephone.uploadtocloud_a = TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(mobilephone.trust_State_on) := mobilephone.trust_State_on;
+
+	next(mobilephone.trust_State_takingphoto) := mobilephone.trust_State_takingphoto;
+
+	next(mobilephone.trust_State_uploadingtocloud) := mobilephone.trust_State_uploadingtocloud;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=3 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=3);

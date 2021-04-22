@@ -1,0 +1,10 @@
+IF Alarm.AlertState = both THEN Light.on
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Temperature Sensor.temperature > 30 THEN Light.on
+IF Home Mode.Mode = home THEN Light.on
+IF Alarm.AlertState = both THEN Alarm.both
+IF Motion Detector.motion = active THEN Light.off
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Alarm.AlertState = both THEN Email.send mail
+IF Weather.weather = windy THEN Email.send mail
+IF Email.State = sending THEN Light.on

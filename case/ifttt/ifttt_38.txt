@@ -1,0 +1,10 @@
+IF Clock.time = 19 THEN Email.send mail
+IF Door.LockState = locked THEN Light.off
+IF Weather.weather = windy THEN Light.on
+IF Email.receiveMail = receive THEN Light.on
+IF Clock.time = 20 THEN Water Heater.off
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+IF Weather.weather = windy THEN Garage Door.close
+IF Sina Weibo.State = posting THEN Camera.on
+IF Temperature Sensor.temperature > 30 THEN Sprinkler Controller.open

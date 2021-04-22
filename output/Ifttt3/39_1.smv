@@ -1,0 +1,219 @@
+--IF Weather.weather = windy THEN Garage Door.close
+--IF Car.location = away THEN Garage Door.close
+--IF Home Mode.Mode = away THEN Garage Door.close
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Car
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_location: {untrusted, trusted};
+VAR
+	location: {garage, away};
+ASSIGN
+	init(trust_location):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE GarageDoor
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DoorState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_DoorState_closed: {untrusted, trusted};
+	trust_DoorState_open: {untrusted, trusted};
+ASSIGN
+	init(DoorState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_DoorState_closed) := trusted;
+	init(trust_DoorState_open) := trusted;
+
+MODULE HomeMode
+FROZENVAR
+	is_attack: boolean;
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	weather: Weather;
+	car: Car;
+	garagedoor: GarageDoor;
+	homemode: HomeMode;
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(intensity) := 0 + toint(weather.is_attack) + toint(car.is_attack) + toint(garagedoor.is_attack) + toint(homemode.is_attack);
+
+	next(garagedoor.DoorState) :=
+	case
+		weather.weather=windy & garagedoor.is_attack=FALSE: closed;
+		car.location=away & garagedoor.is_attack=FALSE: closed;
+		homemode.Mode=away & garagedoor.is_attack=FALSE: closed;
+		garagedoor.DoorState=closed: {closed, open};
+		garagedoor.DoorState=open: {closed, open};
+		TRUE: garagedoor.DoorState;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	next(car.location) :=
+	case
+		car.is_attack=TRUE: {garage, away};
+		TRUE: {garage, away};
+	esac;
+
+	next(garagedoor.contact) :=
+	case
+		garagedoor.DoorState=closed: closed;
+		garagedoor.DoorState=open: open;
+		TRUE: garagedoor.contact;
+	esac;
+
+	next(garagedoor.close_a) :=
+	case
+		garagedoor.DoorState!=closed & next(garagedoor.DoorState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.open_a) :=
+	case
+		garagedoor.DoorState!=open & next(garagedoor.DoorState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(garagedoor.trust_DoorState_closed) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		car.location=away & (car.trust_location=trusted): trusted;
+		car.location=away: untrusted;
+		homemode.Mode=away & (homemode.trust_Mode_away=trusted): trusted;
+		homemode.Mode=away: untrusted;
+		TRUE: garagedoor.trust_DoorState_closed;
+	esac;
+
+	next(garagedoor.trust_DoorState_open) :=
+	case
+		garagedoor.is_attack=TRUE: untrusted;
+		TRUE: garagedoor.trust_DoorState_open;
+	esac;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+SPEC AG !(garagedoor.DoorState=open & garagedoor.trust_DoorState_open=untrusted & intensity<=3 & garagedoor.is_attack=FALSE);

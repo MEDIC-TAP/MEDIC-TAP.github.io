@@ -1,0 +1,19 @@
+IF Motion Detector.motion = active THEN Garage Door.open
+IF Weather.weather = windy THEN Email.send mail
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Home Mode.Mode = away THEN Email.send mail
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Air Quality Monitor.airQuality > 70 THEN Sina Weibo.post
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Humidity Sensor.humidity > 60 THEN Sina Weibo.post
+IF Clock.time = 19 THEN Sina Weibo.post
+IF Car.location = away THEN Garage Door.close
+IF Sina Weibo_1.State = posting THEN Sina Weibo.post
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Calendar.date = MothersDay THEN Light.on
+IF Air Quality Monitor.airQuality > 70 THEN Email.send mail
+IF Air Conditioner.HvacMode = cool THEN Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Sina Weibo.post
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail

@@ -1,0 +1,29 @@
+-- specification AG !(((window.WindowState = open & window.trust_WindowState_open = untrusted) & intensity <= 1) & window.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  weather.is_attack = TRUE
+  weather.trust_weather = untrusted
+  window.is_attack = FALSE
+  airqualitymonitor.is_attack = FALSE
+  airqualitymonitor.trust_airQuality = trusted
+  airqualitymonitor.trust_carbonDioxide = trusted
+  weather.weather = sunny
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  airqualitymonitor.airQuality = 63
+  airqualitymonitor.carbonDioxide = 63
+  a_airQuality = 63
+  a_weather = sunny
+  a_carbonDioxide = 63
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted

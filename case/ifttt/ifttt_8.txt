@@ -1,0 +1,22 @@
+IF Clock.time = 20 THEN Water Heater.off
+IF Home Mode.Mode = away THEN Camera.on
+IF Calendar.date = weekdays THEN Online Bank.transfer money
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Clock.time = 20 THEN Air Conditioner.cool
+IF Refrigerator Door Sensor.contact = open THEN Light.on
+IF Alarm.AlertState = both THEN Light.on
+IF Door.LockState = unlocked | Window.WindowState = open THEN Thermostat.off
+IF Clock.time = 20 THEN Air Conditioner.auto
+IF Clock.time = 20 THEN Door.lock
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Weather.weather != windy THEN Sprinkler Controller.open
+IF Air Quality Monitor.airQuality > 70 THEN Light.on
+IF Light.SwitchState = off THEN Light.on
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Light.SwitchState = on THEN Light.off
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.off
+IF Weather.weather = windy THEN Sina Weibo.post
+IF Smoke Sensor.smoke = detected THEN Oven.paused
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Temperature Sensor.temperature < 10 THEN Sprinkler Controller.open
+IF Motion Detector.motion = inactive THEN Light.off

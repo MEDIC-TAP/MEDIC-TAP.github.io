@@ -1,0 +1,9 @@
+IF Motion Detector.motion = inactive & Door.LockState = unlocked THEN Door.lock
+IF Motion Detector.motion = inactive & Light.SwitchState = on THEN Light.off
+IF Motion Detector.motion = inactive & Air Purifier.on THEN Air Purifier.off
+IF Motion Detector.motion = inactive & Window.WindowState = open THEN Window.close
+IF Motion Detector.motion = inactive & Garage Door.DoorState = open THEN Garage Door.close
+IF Motion Detector.motion = inactive & Washer Machine.MachineState = run THEN Washer Machine.stop
+IF Motion Detector.motion = inactive & Coffee Maker.MachineState = on THEN Coffee Maker.off
+IF Motion Detector.motion = inactive & Water Heater.MachineState = on THEN Water Heater.off
+IF Motion Detector.motion = inactive & Humidifier.MachineState = on THEN Humidifier.off

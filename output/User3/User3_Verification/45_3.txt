@@ -1,0 +1,32 @@
+-- specification AG !(sinaweibo.privacy_content = private & intensity <= 3)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  sinaweibo.is_attack = TRUE
+  camera.is_attack = FALSE
+  sinaweibo.State = idle
+  sinaweibo.post_a = FALSE
+  sinaweibo.trust_State_idle = trusted
+  sinaweibo.trust_State_posting = trusted
+  sinaweibo.privacy_content = public
+  camera.MachineState = on
+  camera.on_a = FALSE
+  camera.off_a = FALSE
+  camera.takephoto_a = FALSE
+  camera.trust_MachineState_off = trusted
+  camera.trust_MachineState_on = trusted
+  camera.trust_MachineState_takingphoto = trusted
+  camera.privacy_photo = private
+-> State: 1.2 <-
+  sinaweibo.trust_State_idle = untrusted
+  sinaweibo.trust_State_posting = untrusted
+  camera.MachineState = takingphoto
+  camera.takephoto_a = TRUE
+-> State: 1.3 <-
+  sinaweibo.State = posting
+  sinaweibo.post_a = TRUE
+  sinaweibo.privacy_content = private
+  camera.MachineState = on
+  camera.takephoto_a = FALSE

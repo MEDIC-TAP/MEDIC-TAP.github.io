@@ -1,0 +1,8 @@
+IF Email.receiveMail = receive THEN Email.send mail
+IF Refrigerator Door Sensor.contact = open THEN Light.on
+IF Email.receiveMail = receive THEN Sina Weibo.post
+IF Clock.time = 20 THEN Light.off
+IF Motion Detector.motion = inactive THEN Alarm.both
+IF Alarm.AlertState = both THEN Light.on
+IF Door.LockState = unlocked THEN Camera.take photo
+IF Air Quality Monitor.airQuality > 70 THEN Email.send mail

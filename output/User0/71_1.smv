@@ -1,0 +1,150 @@
+--IF Door RFID.RFID = authorized THEN Door.unlock
+--IF Illuminance Sensor.illuminance < 10 THEN Window.close
+--IF Door RFID.RFID = not authorized THEN Door.lock
+
+MODULE Window
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE IlluminanceSensor
+FROZENVAR
+	trust_illuminance: {untrusted, trusted};
+VAR
+	illuminance: 0..100;
+ASSIGN
+	init(trust_illuminance):= untrusted;
+
+MODULE DoorRFID
+FROZENVAR
+	trust_RFID: {untrusted, trusted};
+VAR
+	RFID: {authorized, notauthorized};
+ASSIGN
+	init(trust_RFID):= trusted;
+
+MODULE Door
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+VAR
+	window: Window;
+	illuminancesensor: IlluminanceSensor;
+	doorrfid: DoorRFID;
+	door: Door;
+	a_illuminance: 0..100;
+ASSIGN
+	next(window.WindowState) :=
+	case
+		illuminancesensor.illuminance<10: closed;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		doorrfid.RFID=authorized: unlocked;
+		doorrfid.RFID=notauthorized: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_illuminance) :=
+	case
+		a_illuminance=100: {toint(a_illuminance)-1, a_illuminance};
+		a_illuminance>100: {100};
+		a_illuminance=0: {a_illuminance, a_illuminance+1};
+		a_illuminance<0: {0};
+		TRUE: {a_illuminance+-1, a_illuminance, a_illuminance+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	illuminancesensor.illuminance := a_illuminance;
+
+	next(doorrfid.RFID) :=
+	case
+		TRUE: {authorized, notauthorized};
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		illuminancesensor.illuminance<10 & (illuminancesensor.trust_illuminance=trusted): trusted;
+		illuminancesensor.illuminance<10: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		doorrfid.RFID=notauthorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=notauthorized: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		doorrfid.RFID=authorized & (doorrfid.trust_RFID=trusted): trusted;
+		doorrfid.RFID=authorized: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted);

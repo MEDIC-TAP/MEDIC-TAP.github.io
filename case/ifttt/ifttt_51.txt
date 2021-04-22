@@ -1,0 +1,20 @@
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Clock.time = 19 THEN Light.on
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Clock.time = 20 THEN Water Heater.on
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Weather.weather = windy THEN Light.on
+IF Sina Weibo.State = posting THEN Air Conditioner.auto
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Calendar.date = weekend THEN Camera.off
+IF Weather.weather = windy THEN Garage Door.close
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Mobile Phone.location = home THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Door.LockState = locked THEN Email.send mail
+IF Light.SwitchState = on THEN Light.on
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Temperature Sensor.temperature > 30 THEN Sprinkler Controller.open

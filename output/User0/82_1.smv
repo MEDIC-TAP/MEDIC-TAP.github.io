@@ -1,0 +1,199 @@
+--IF Humidity Sensor.humidity > 20 THEN Window.open
+--IF Motion Detector.motion = inactive THEN Window.close
+--IF Gas Sensor.gas > 19 THEN Window.open
+--IF Smoke Sensor.smoke = detected THEN Window.open
+--IF Motion Detector.motion = inactive THEN Door.lock
+
+MODULE Window
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE MotionDetector
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):= trusted;
+
+MODULE GasSensor
+FROZENVAR
+	trust_gas: {untrusted, trusted};
+VAR
+	gas: 0..100;
+ASSIGN
+	init(trust_gas):= untrusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):= untrusted;
+
+MODULE HumiditySensor
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):= untrusted;
+
+MODULE Door
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+VAR
+	window: Window;
+	motiondetector: MotionDetector;
+	gassensor: GasSensor;
+	smokesensor: SmokeSensor;
+	humiditysensor: HumiditySensor;
+	door: Door;
+	a_motion: {active, inactive};
+	a_gas: 0..100;
+	a_smoke: {clear, detected, tested};
+	a_humidity: 0..100;
+ASSIGN
+	next(window.WindowState) :=
+	case
+		humiditysensor.humidity>20: open;
+		motiondetector.motion=inactive: closed;
+		gassensor.gas>19: open;
+		smokesensor.smoke=detected: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(door.LockState) :=
+	case
+		motiondetector.motion=inactive: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_gas) :=
+	case
+		a_gas=100: {toint(a_gas)-1, a_gas};
+		a_gas>100: {100};
+		a_gas=0: {a_gas, a_gas+1};
+		a_gas<0: {0};
+		TRUE: {a_gas+-1, a_gas, a_gas+1};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100: {toint(a_humidity)-1, a_humidity};
+		a_humidity>100: {100};
+		a_humidity=0: {a_humidity, a_humidity+1};
+		a_humidity<0: {0};
+		TRUE: {a_humidity+-1, a_humidity, a_humidity+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	motiondetector.motion := a_motion;
+
+	gassensor.gas := a_gas;
+
+	smokesensor.smoke := a_smoke;
+
+	humiditysensor.humidity := a_humidity;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		motiondetector.motion=inactive & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=inactive: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		humiditysensor.humidity>20 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>20: untrusted;
+		gassensor.gas>19 & (gassensor.trust_gas=trusted): trusted;
+		gassensor.gas>19: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(door.trust_LockState_locked) :=
+	case
+		motiondetector.motion=inactive & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=inactive: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted);
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted);

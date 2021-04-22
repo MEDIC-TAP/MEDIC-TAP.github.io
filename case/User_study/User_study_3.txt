@@ -1,0 +1,6 @@
+IF Mobile Phone.location = home & Illuminance Sensor.illuminance < 10 THEN Light.on
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Clock.time = 8 THEN Coffee Maker.on
+IF Motion Detector.motion = inactive THEN Home Mode.set sleep mode
+IF Gas Sensor.gas > 60 THEN Online Bank.transfer money

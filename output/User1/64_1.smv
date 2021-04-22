@@ -1,0 +1,245 @@
+--IF Smoke Sensor.smoke = detected THEN Alarm.both
+--IF Alarm.AlertState = both & Motion Detector.motion = active THEN Window.open
+--IF Gas Sensor.gas > 20 THEN Alarm.both
+
+MODULE MotionDetector
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE GasSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_gas: {untrusted, trusted};
+VAR
+	gas: 0..100;
+ASSIGN
+	init(trust_gas):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE SmokeSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Alarm
+FROZENVAR
+	is_attack: boolean;
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	motiondetector: MotionDetector;
+	window: Window;
+	gassensor: GasSensor;
+	smokesensor: SmokeSensor;
+	alarm: Alarm;
+	a_motion: {active, inactive};
+	a_gas: 0..100;
+	a_smoke: {clear, detected, tested};
+ASSIGN
+	init(intensity) := 0 + toint(motiondetector.is_attack) + toint(window.is_attack) + toint(gassensor.is_attack) + toint(smokesensor.is_attack) + toint(alarm.is_attack);
+
+	next(window.WindowState) :=
+	case
+		alarm.AlertState=both & motiondetector.motion=active & window.is_attack=FALSE: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		smokesensor.smoke=detected & alarm.is_attack=FALSE: both;
+		gassensor.gas>20 & alarm.is_attack=FALSE: both;
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_gas) :=
+	case
+		a_gas=100: {toint(a_gas)-1, a_gas};
+		a_gas>100: {100};
+		a_gas=0: {a_gas, a_gas+1};
+		a_gas<0: {0};
+		TRUE: {a_gas+-1, a_gas, a_gas+1};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	motiondetector.motion:=
+	case
+		motiondetector.is_attack=TRUE: {active, inactive};
+		TRUE: a_motion;
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	gassensor.gas:=
+	case
+		gassensor.is_attack=TRUE: 0..100;
+		TRUE: a_gas;
+	esac;
+
+	smokesensor.smoke:=
+	case
+		smokesensor.is_attack=TRUE: {clear, detected, tested};
+		TRUE: a_smoke;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		alarm.AlertState=both & motiondetector.motion=active & (alarm.trust_AlertState_both=trusted | motiondetector.trust_motion=trusted): trusted;
+		alarm.AlertState=both & motiondetector.motion=active: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+	next(alarm.trust_AlertState_both) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		gassensor.gas>20 & (gassensor.trust_gas=trusted): trusted;
+		gassensor.gas>20: untrusted;
+		TRUE: alarm.trust_AlertState_both;
+	esac;
+
+	next(alarm.trust_AlertState_off) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_off;
+	esac;
+
+	next(alarm.trust_AlertState_siren) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_siren;
+	esac;
+
+	next(alarm.trust_AlertState_strobe) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_strobe;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);

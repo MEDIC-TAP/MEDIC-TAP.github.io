@@ -1,0 +1,11 @@
+IF Gas Sensor.gas > 20 THEN Alarm.both
+IF Alarm.AlertState = both & Motion Detector.motion = active THEN Window.open
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Alarm.AlertState = both & Motion Detector.motion = active THEN Window.open
+IF Motion Detector.motion = inactive THEN Air Conditioner.off
+IF Motion Detector.motion = inactive THEN Air Conditioner.off
+IF Motion Detector.motion = inactive THEN TV.off
+IF Air Quality Monitor.airQuality >= 15 THEN Air Purifier.on
+IF Motion Detector.motion = inactive THEN Air Purifier.off
+IF Gas Sensor.gas > 20 THEN Home Mode.send alert message
+IF Smoke Sensor.smoke = detected THEN Home Mode.send alert message

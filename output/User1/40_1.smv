@@ -1,0 +1,128 @@
+--IF Mobile Phone.location != home & Door.LockState = unlocked THEN Door.lock
+
+MODULE MobilePhone
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {on, takingphoto, uploadingtocloud};
+	takephoto_a: boolean;
+	uploadtocloud_a: boolean;
+	location: {home, away, garageDoor, Shanghai};
+	steps: 0..100;
+	trust_location: {trusted};
+	trust_steps: {trusted};
+	trust_State_on: {untrusted, trusted};
+	trust_State_takingphoto: {untrusted, trusted};
+	trust_State_uploadingtocloud: {untrusted, trusted};
+	privacy_photo: {private};
+	privacy_steps: {public};
+	privacy_location: {public};
+ASSIGN
+	init(State) := on;
+	init(takephoto_a) := FALSE;
+	init(uploadtocloud_a) := FALSE;
+	init(trust_State_on) := trusted;
+	init(trust_State_takingphoto) := trusted;
+	init(trust_State_uploadingtocloud) := trusted;
+
+MODULE Door
+FROZENVAR
+	is_attack: boolean;
+VAR
+	LockState: {locked, unlocked};
+	lock_a: boolean;
+	unlock_a: boolean;
+	trust_LockState_locked: {untrusted, trusted};
+	trust_LockState_unlocked: {untrusted, trusted};
+ASSIGN
+	init(LockState) := locked;
+	init(lock_a) := FALSE;
+	init(unlock_a) := FALSE;
+	init(trust_LockState_locked) := trusted;
+	init(trust_LockState_unlocked) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	mobilephone: MobilePhone;
+	door: Door;
+ASSIGN
+	init(intensity) := 0 + toint(mobilephone.is_attack) + toint(door.is_attack);
+
+	next(mobilephone.State) :=
+	case
+		mobilephone.State=takingphoto: on;
+		mobilephone.State=uploadingtocloud: on;
+		mobilephone.State=on: {on, takingphoto, uploadingtocloud};
+		mobilephone.State=takingphoto: {takingphoto};
+		mobilephone.State=uploadingtocloud: {uploadingtocloud};
+		TRUE: mobilephone.State;
+	esac;
+
+	next(door.LockState) :=
+	case
+		mobilephone.location!=home & door.LockState=unlocked & door.is_attack=FALSE: locked;
+		door.LockState=locked: {locked, unlocked};
+		door.LockState=unlocked: {locked, unlocked};
+		TRUE: door.LockState;
+	esac;
+
+	next(mobilephone.location) :=
+	case
+		TRUE: {home, away, garageDoor, Shanghai};
+	esac;
+
+	next(mobilephone.steps) :=
+	case
+		mobilephone.steps>=100: {100};
+		mobilephone.steps=0: {mobilephone.steps, mobilephone.steps+1};
+		mobilephone.steps<0: {0};
+		TRUE: {mobilephone.steps, mobilephone.steps+1};
+	esac;
+
+	next(mobilephone.takephoto_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=takingphoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.uploadtocloud_a) :=
+	case
+		mobilephone.State=on & next(mobilephone.State)=uploadingtocloud: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.lock_a) :=
+	case
+		door.LockState!=locked & next(door.LockState)=locked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(door.unlock_a) :=
+	case
+		door.LockState!=unlocked & next(door.LockState)=unlocked: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(mobilephone.trust_State_on) := mobilephone.trust_State_on;
+
+	next(mobilephone.trust_State_takingphoto) := mobilephone.trust_State_takingphoto;
+
+	next(mobilephone.trust_State_uploadingtocloud) := mobilephone.trust_State_uploadingtocloud;
+
+	next(door.trust_LockState_locked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		mobilephone.location!=home & door.LockState=unlocked & (mobilephone.trust_location=trusted | door.trust_LockState_unlocked=trusted): trusted;
+		mobilephone.location!=home & door.LockState=unlocked: untrusted;
+		TRUE: door.trust_LockState_locked;
+	esac;
+
+	next(door.trust_LockState_unlocked) :=
+	case
+		door.is_attack=TRUE: untrusted;
+		TRUE: door.trust_LockState_unlocked;
+	esac;
+
+SPEC AG !(door.LockState=unlocked & door.trust_LockState_unlocked=untrusted & intensity<=1 & door.is_attack=FALSE);

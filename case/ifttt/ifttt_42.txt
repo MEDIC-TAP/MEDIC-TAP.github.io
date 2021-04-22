@@ -1,0 +1,25 @@
+IF Alarm.AlertState = both THEN Email.send mail
+IF Home Mode.Mode = away THEN Light.on
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Clock.time = 20 THEN Email.send mail
+IF Motion Detector.motion = active THEN Light.on
+IF Motion Detector.motion = active THEN Alarm.off
+IF Humidity Sensor.humidity > 60 THEN Sprinkler Controller.close
+IF Clock.time = 6 THEN Light.on
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Sina Weibo.State = posting THEN Online Bank.transfer money
+IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+IF Car.location = garage THEN Email.send mail
+IF Clock.time = 19 THEN Online Bank.transfer money
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.auto
+IF Calendar.date = weekdays THEN Email.send mail
+IF Weather.weather = windy THEN Sina Weibo.post
+IF Car.location = garage THEN Garage Door.open
+IF Weather.weather = rainy THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Light.off
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on
+IF Door.LockState = locked THEN Email.send mail
+IF Calendar.date = weekend THEN Email.send mail
+IF Car.location = away THEN Light.off
+IF Motion Detector.motion = active THEN Camera.take photo & Email.send mail
+IF Home Mode.Mode = away THEN Humidifier.on

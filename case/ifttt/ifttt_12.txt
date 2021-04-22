@@ -1,0 +1,21 @@
+IF Clock.time = 19 THEN Light.off
+IF Door.LockState = unlocked THEN Light.on
+IF Calendar.date = MothersDay THEN Sina Weibo.post
+IF Calendar.date = weekend THEN Email.send mail
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Temperature Sensor.temperature > 30 THEN Thermostat.off
+IF Air Conditioner.HvacMode = auto THEN Light.on
+IF Motion Detector.motion = active THEN Email.send mail
+IF Email.receiveMail = receive THEN Online Bank.transfer money
+IF Email.receiveMail = receive THEN Email.send mail
+IF Clock.time = 20 THEN Water Heater.off
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Home Mode.Mode = away THEN Garage Door.close
+IF Calendar.date = weekend THEN Air Conditioner.off
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Email.receiveMail = receive THEN Alarm.both
+IF Clock.time = 6 THEN Coffee Maker.on
+IF Motion Detector.motion = inactive THEN Camera.on
+IF Refrigerator Door Sensor.contact = open THEN Light.on
+IF Clock.time = 20 THEN Air Conditioner.off
+IF Home Mode.Mode = away THEN Camera.on

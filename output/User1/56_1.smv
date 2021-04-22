@@ -1,0 +1,101 @@
+--IF Gas Sensor.gas > 70 THEN Window.open
+
+MODULE Window
+FROZENVAR
+	is_attack: boolean;
+VAR
+	WindowState: {closed, open};
+	close_a: boolean;
+	open_a: boolean;
+	contact: {closed, open};
+	trust_contact: {trusted};
+	trust_WindowState_closed: {untrusted, trusted};
+	trust_WindowState_open: {untrusted, trusted};
+ASSIGN
+	init(WindowState) := closed;
+	init(close_a) := FALSE;
+	init(open_a) := FALSE;
+	init(trust_WindowState_closed) := trusted;
+	init(trust_WindowState_open) := trusted;
+
+MODULE GasSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_gas: {untrusted, trusted};
+VAR
+	gas: 0..100;
+ASSIGN
+	init(trust_gas):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	window: Window;
+	gassensor: GasSensor;
+	a_gas: 0..100;
+ASSIGN
+	init(intensity) := 0 + toint(window.is_attack) + toint(gassensor.is_attack);
+
+	next(window.WindowState) :=
+	case
+		gassensor.gas>70 & window.is_attack=FALSE: open;
+		window.WindowState=closed: {closed, open};
+		window.WindowState=open: {closed, open};
+		TRUE: window.WindowState;
+	esac;
+
+	next(a_gas) :=
+	case
+		a_gas=100: {toint(a_gas)-1, a_gas};
+		a_gas>100: {100};
+		a_gas=0: {a_gas, a_gas+1};
+		a_gas<0: {0};
+		TRUE: {a_gas+-1, a_gas, a_gas+1};
+	esac;
+
+	next(window.contact) :=
+	case
+		window.WindowState=closed: closed;
+		window.WindowState=open: open;
+		TRUE: window.contact;
+	esac;
+
+	gassensor.gas:=
+	case
+		gassensor.is_attack=TRUE: 0..100;
+		TRUE: a_gas;
+	esac;
+
+	next(window.close_a) :=
+	case
+		window.WindowState!=closed & next(window.WindowState)=closed: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.open_a) :=
+	case
+		window.WindowState!=open & next(window.WindowState)=open: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(window.trust_WindowState_closed) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		TRUE: window.trust_WindowState_closed;
+	esac;
+
+	next(window.trust_WindowState_open) :=
+	case
+		window.is_attack=TRUE: untrusted;
+		gassensor.gas>70 & (gassensor.trust_gas=trusted): trusted;
+		gassensor.gas>70: untrusted;
+		TRUE: window.trust_WindowState_open;
+	esac;
+
+SPEC AG !(window.WindowState=open & window.trust_WindowState_open=untrusted & intensity<=1 & window.is_attack=FALSE);

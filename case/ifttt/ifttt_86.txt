@@ -1,0 +1,11 @@
+IF Weather.weather != windy THEN Sprinkler Controller.open
+IF Clock.time = 19 THEN Air Conditioner.off
+IF Home Mode.Mode = home THEN Light.on
+IF Weather.weather = windy THEN Email.send mail
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Door.LockState = unlocked THEN Light.on
+IF Calendar.date = weekend THEN Air Conditioner.auto
+IF Motion Detector.motion = active THEN Light.on
+IF Home Mode.Mode = away THEN Garage Door.close
+IF Clock.time = 20 THEN Air Conditioner.auto
+IF Air Quality Monitor.airQuality > 70 THEN Light.on

@@ -1,0 +1,6 @@
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 10 THEN Air Conditioner.heat
+IF Motion Detector.motion = active THEN Light.on
+IF Gas Sensor.gas > 60 THEN Window.open
+IF Gas Sensor.gas > 60 THEN Alarm.both
+IF Email.receiveKey = Key THEN Online Bank.transfer money

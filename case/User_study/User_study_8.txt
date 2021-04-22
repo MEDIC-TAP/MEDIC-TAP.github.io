@@ -1,0 +1,5 @@
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Humidity Sensor.humidity < 10 THEN Humidifier.on
+IF Weather.weather = rainy THEN Window.close
+IF Gas Sensor.gas > 60 THEN Alarm.both
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool

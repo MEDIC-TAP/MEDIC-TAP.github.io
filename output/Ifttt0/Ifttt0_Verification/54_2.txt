@@ -1,0 +1,19 @@
+-- specification AG !(onlinebank.State = transfering & onlinebank.trust_State_transfering = untrusted)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  temperaturesensor.trust_temperature = untrusted
+  humiditysensor.trust_humidity = untrusted
+  temperaturesensor.temperature = 63
+  humiditysensor.humidity = 63
+  onlinebank.State = idle
+  onlinebank.transfermoney_a = FALSE
+  onlinebank.trust_State_idle = trusted
+  onlinebank.trust_State_transfering = trusted
+  a_temperature = 63
+  a_humidity = 63
+-> State: 1.2 <-
+  onlinebank.State = transfering
+  onlinebank.transfermoney_a = TRUE
+  onlinebank.trust_State_transfering = untrusted

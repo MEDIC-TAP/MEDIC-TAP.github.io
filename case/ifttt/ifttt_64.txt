@@ -1,0 +1,25 @@
+IF Weather.weather = windy THEN Garage Door.close
+IF Humidity Sensor.humidity > 60 THEN Humidifier.on
+IF Clock.time = 20 THEN Light.off
+IF Motion Detector.motion = active THEN Sprinkler Controller.open
+IF Calendar.date = weekend THEN Camera.on
+IF Car.location = away THEN Garage Door.close
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Alarm.AlertState = both THEN Light.on
+IF Door.LockState = locked THEN Email.send mail
+IF Home Mode.Mode = home THEN Online Bank.transfer money
+IF Calendar.date = weekdays THEN Email.send mail
+IF Clock.time = 6 THEN Light.off
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Air Quality Monitor.airQuality > 70 THEN Camera.take photo & Email.send mail
+IF Motion Detector.motion = active THEN Camera.take photo
+IF Smoke Sensor.smoke = detected THEN Alarm.both
+IF Sina Weibo.State = posting THEN Light.off
+IF Mobile Phone.location = home THEN Garage Door.open
+IF Air Quality Monitor.airQuality > 70 THEN Sina Weibo.post
+IF Home Mode.Mode = away THEN Light.off
+IF Temperature Sensor.temperature < 10 THEN Light.on
+IF Air Conditioner.HvacMode = off THEN Light.off
+IF Car.location = garage THEN Email.send mail
+IF Motion Detector.motion = active THEN Camera.off
+IF Car.location = away THEN Light.off

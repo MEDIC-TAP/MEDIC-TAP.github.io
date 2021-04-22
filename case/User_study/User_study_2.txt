@@ -1,0 +1,5 @@
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Gas Sensor.gas > 60 THEN Alarm.both
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Swimming Pool Water Quality Sensor.waterQuality > 70 THEN Swimming Pool Water Pump.on
+IF Temperature Sensor.temperature > 26 & Motion Detector.motion = active THEN Air Conditioner.cool

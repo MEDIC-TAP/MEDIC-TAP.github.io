@@ -1,0 +1,5 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Calendar.season = summer THEN Air Conditioner.cool
+IF Smoke Sensor.smoke = detected THEN Ventilator.on
+IF Air Quality Monitor.airQuality > 70 THEN Air Purifier.on
+IF Clock.time = 15 THEN Light.on

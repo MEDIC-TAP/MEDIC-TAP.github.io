@@ -1,0 +1,12 @@
+IF Calendar.date = weekend THEN Camera.off
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Calendar.date = weekend THEN Light.on
+IF Clock.time = 6 THEN Air Conditioner.auto
+IF Motion Detector.motion = inactive THEN Sina Weibo.post
+IF Clock.time = 20 THEN Camera.take photo & Email.send mail
+IF Calendar.date = weekdays THEN Sina Weibo.post
+IF Washer Machine.MachineState = stop THEN Email.send mail
+IF Clock.time = 19 THEN Light.on
+IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+IF Clock.time = 19 THEN Camera.take photo
+IF Air Conditioner.HvacMode = auto THEN Light.on

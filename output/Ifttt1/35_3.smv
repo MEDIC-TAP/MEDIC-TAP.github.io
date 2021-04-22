@@ -1,0 +1,862 @@
+--IF Sina Weibo.State = posting THEN Sina Weibo.post
+--IF Air Conditioner.HvacMode = cool THEN Email.send mail
+--IF Weather.weather = windy THEN Alarm.both
+--IF Motion Detector.motion = inactive THEN Email.send mail
+--IF Home Mode.Mode = away THEN Email.send mail
+--IF Humidity Sensor.humidity > 60 THEN Air Conditioner.auto
+--IF Smoke Sensor.smoke = detected THEN Email.send mail
+--IF Weather.weather = rainy THEN Email.send mail
+--IF Alarm.AlertState = both THEN Email.send mail
+--IF Clock.time = 20 THEN Air Conditioner.auto
+--IF Temperature Sensor.temperature > 30 THEN Email.send mail
+--IF Email.State = sending THEN Sina Weibo.post
+--IF Air Quality Monitor.carbonDioxide > 70 THEN Sina Weibo.post
+--IF Dryer.MachineState = stop THEN Sina Weibo.post
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE Email
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, sending};
+	sendmail_a: boolean;
+	receiveKey: {Key, others};
+	receiveMail: {idle, receive};
+	trust_receiveKey: {trusted};
+	trust_receiveMail: {trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sending: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(sendmail_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sending) := trusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE HumiditySensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_humidity: {untrusted, trusted};
+VAR
+	humidity: 0..100;
+ASSIGN
+	init(trust_humidity):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Dryer
+FROZENVAR
+	is_attack: boolean;
+VAR
+	DryerMode: {highHeat, lowHeat, regular};
+	MachineState: {pause, run, stop};
+	regular_a: boolean;
+	lowHeat_a: boolean;
+	highHeat_a: boolean;
+	pause_a: boolean;
+	run_a: boolean;
+	stop_a: boolean;
+	dryerJobState: {cooling, delayWash, drying, finished, none, weightSensing, wrinklePrevent};
+	trust_dryerJobState: {untrusted};
+	trust_DryerMode_highHeat: {untrusted, trusted};
+	trust_DryerMode_lowHeat: {untrusted, trusted};
+	trust_DryerMode_regular: {untrusted, trusted};
+	trust_MachineState_pause: {untrusted, trusted};
+	trust_MachineState_run: {untrusted, trusted};
+	trust_MachineState_stop: {untrusted, trusted};
+ASSIGN
+	init(DryerMode) := regular;
+	init(MachineState) := pause;
+	init(regular_a) := FALSE;
+	init(lowHeat_a) := FALSE;
+	init(highHeat_a) := FALSE;
+	init(pause_a) := FALSE;
+	init(run_a) := FALSE;
+	init(stop_a) := FALSE;
+	init(trust_DryerMode_regular) := trusted;
+	init(trust_MachineState_pause) := trusted;
+	init(trust_MachineState_run) := trusted;
+	init(trust_MachineState_stop) := trusted;
+	init(trust_DryerMode_lowHeat) := trusted;
+	init(trust_DryerMode_highHeat) := trusted;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE HomeMode
+FROZENVAR
+	is_attack: boolean;
+VAR
+	Mode: {away, home, sleep};
+	State: {idle, sendingAlertMessage, sendingPhoto};
+	sethomemode_a: boolean;
+	setawaymode_a: boolean;
+	setsleepmode_a: boolean;
+	sendalertmessage_a: boolean;
+	sendphoto_a: boolean;
+	trust_Mode_away: {untrusted, trusted};
+	trust_Mode_home: {untrusted, trusted};
+	trust_Mode_sleep: {untrusted, trusted};
+	trust_State_idle: {untrusted, trusted};
+	trust_State_sendingAlertMessage: {untrusted, trusted};
+	trust_State_sendingPhoto: {untrusted, trusted};
+ASSIGN
+	init(Mode) := home;
+	init(State) := idle;
+	init(sethomemode_a) := FALSE;
+	init(setawaymode_a) := FALSE;
+	init(setsleepmode_a) := FALSE;
+	init(sendalertmessage_a) := FALSE;
+	init(sendphoto_a) := FALSE;
+	init(trust_Mode_home) := trusted;
+	init(trust_State_idle) := trusted;
+	init(trust_State_sendingAlertMessage) := trusted;
+	init(trust_State_sendingPhoto) := trusted;
+	init(trust_Mode_away) := trusted;
+	init(trust_Mode_sleep) := trusted;
+
+MODULE Weather
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_weather: {untrusted, trusted};
+VAR
+	weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+ASSIGN
+	init(trust_weather):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE MotionDetector
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_motion: {untrusted, trusted};
+VAR
+	motion: {active, inactive};
+ASSIGN
+	init(trust_motion):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE TemperatureSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_temperature: {untrusted, trusted};
+VAR
+	temperature: 0..100;
+ASSIGN
+	init(trust_temperature):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE AirConditioner
+FROZENVAR
+	is_attack: boolean;
+VAR
+	HvacMode: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+	auto_a: boolean;
+	cool_a: boolean;
+	dry_a: boolean;
+	coolClean_a: boolean;
+	dryClean_a: boolean;
+	fanOnly_a: boolean;
+	heat_a: boolean;
+	heatClean_a: boolean;
+	off_a: boolean;
+	temperature_rate: -1..1;
+	humidity_rate: -1..1;
+	trust_HvacMode_auto: {untrusted, trusted};
+	trust_HvacMode_cool: {untrusted, trusted};
+	trust_HvacMode_coolClean: {untrusted, trusted};
+	trust_HvacMode_dry: {untrusted, trusted};
+	trust_HvacMode_dryClean: {untrusted, trusted};
+	trust_HvacMode_fanOnly: {untrusted, trusted};
+	trust_HvacMode_heat: {untrusted, trusted};
+	trust_HvacMode_heatClean: {untrusted, trusted};
+	trust_HvacMode_off: {untrusted, trusted};
+ASSIGN
+	init(HvacMode) := auto;
+	init(auto_a) := FALSE;
+	init(cool_a) := FALSE;
+	init(dry_a) := FALSE;
+	init(coolClean_a) := FALSE;
+	init(dryClean_a) := FALSE;
+	init(fanOnly_a) := FALSE;
+	init(heat_a) := FALSE;
+	init(heatClean_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_HvacMode_auto) := trusted;
+	init(trust_HvacMode_cool) := trusted;
+	init(trust_HvacMode_dry) := trusted;
+	init(trust_HvacMode_coolClean) := trusted;
+	init(trust_HvacMode_dryClean) := trusted;
+	init(trust_HvacMode_fanOnly) := trusted;
+	init(trust_HvacMode_heat) := trusted;
+	init(trust_HvacMode_heatClean) := trusted;
+	init(trust_HvacMode_off) := trusted;
+
+MODULE AirQualityMonitor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_airQuality: {untrusted, trusted};
+	trust_carbonDioxide: {untrusted, trusted};
+VAR
+	airQuality: 0..100;
+	carbonDioxide: 0..100;
+ASSIGN
+	init(trust_airQuality):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+	init(trust_carbonDioxide):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE Alarm
+FROZENVAR
+	is_attack: boolean;
+VAR
+	AlertState: {both, off, siren, strobe};
+	both_a: boolean;
+	off_a: boolean;
+	siren_a: boolean;
+	strobe_a: boolean;
+	trust_AlertState_both: {untrusted, trusted};
+	trust_AlertState_off: {untrusted, trusted};
+	trust_AlertState_siren: {untrusted, trusted};
+	trust_AlertState_strobe: {untrusted, trusted};
+ASSIGN
+	init(AlertState) := both;
+	init(both_a) := FALSE;
+	init(off_a) := FALSE;
+	init(siren_a) := FALSE;
+	init(strobe_a) := FALSE;
+	init(trust_AlertState_both) := trusted;
+	init(trust_AlertState_off) := trusted;
+	init(trust_AlertState_siren) := trusted;
+	init(trust_AlertState_strobe) := trusted;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	email: Email;
+	smokesensor: SmokeSensor;
+	humiditysensor: HumiditySensor;
+	dryer: Dryer;
+	clock: Clock;
+	homemode: HomeMode;
+	weather: Weather;
+	motiondetector: MotionDetector;
+	temperaturesensor: TemperatureSensor;
+	airconditioner: AirConditioner;
+	airqualitymonitor: AirQualityMonitor;
+	alarm: Alarm;
+	a_airQuality: 0..100;
+	a_motion: {active, inactive};
+	a_smoke: {clear, detected, tested};
+	a_weather: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	a_temperature: 0..100;
+	a_humidity: 0..100;
+	a_carbonDioxide: 0..100;
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(email.is_attack) + toint(smokesensor.is_attack) + toint(humiditysensor.is_attack) + toint(dryer.is_attack) + toint(clock.is_attack) + toint(homemode.is_attack) + toint(weather.is_attack) + toint(motiondetector.is_attack) + toint(temperaturesensor.is_attack) + toint(airconditioner.is_attack) + toint(airqualitymonitor.is_attack) + toint(alarm.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		sinaweibo.State=posting & sinaweibo.is_attack=FALSE: posting;
+		email.State=sending & sinaweibo.is_attack=FALSE: posting;
+		airqualitymonitor.carbonDioxide>70 & sinaweibo.is_attack=FALSE: posting;
+		dryer.MachineState=stop & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(email.State) :=
+	case
+		airconditioner.HvacMode=cool & email.is_attack=FALSE: sending;
+		motiondetector.motion=inactive & email.is_attack=FALSE: sending;
+		homemode.Mode=away & email.is_attack=FALSE: sending;
+		smokesensor.smoke=detected & email.is_attack=FALSE: sending;
+		weather.weather=rainy & email.is_attack=FALSE: sending;
+		alarm.AlertState=both & email.is_attack=FALSE: sending;
+		temperaturesensor.temperature>30 & email.is_attack=FALSE: sending;
+		email.State=sending: idle;
+		email.State=idle: {idle, sending};
+		email.State=sending: {sending};
+		TRUE: email.State;
+	esac;
+
+	next(dryer.DryerMode) :=
+	case
+		dryer.DryerMode=highHeat: {highHeat, lowHeat, regular};
+		dryer.DryerMode=lowHeat: {highHeat, lowHeat, regular};
+		dryer.DryerMode=regular: {highHeat, lowHeat, regular};
+		TRUE: dryer.DryerMode;
+	esac;
+
+	next(dryer.MachineState) :=
+	case
+		dryer.MachineState=pause: {pause, run, stop};
+		dryer.MachineState=run: {pause, run, stop};
+		dryer.MachineState=stop: {pause, run, stop};
+		TRUE: dryer.MachineState;
+	esac;
+
+	next(homemode.Mode) :=
+	case
+		homemode.Mode=away: {away, home, sleep};
+		homemode.Mode=home: {away, home, sleep};
+		homemode.Mode=sleep: {away, home, sleep};
+		TRUE: homemode.Mode;
+	esac;
+
+	next(homemode.State) :=
+	case
+		homemode.State=sendingAlertMessage: idle;
+		homemode.State=sendingPhoto: idle;
+		homemode.State=idle: {idle, sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingAlertMessage: {sendingAlertMessage, sendingPhoto};
+		homemode.State=sendingPhoto: {sendingAlertMessage, sendingPhoto};
+		TRUE: homemode.State;
+	esac;
+
+	next(airconditioner.HvacMode) :=
+	case
+		humiditysensor.humidity>60 & airconditioner.is_attack=FALSE: auto;
+		clock.time=20 & airconditioner.is_attack=FALSE: auto;
+		airconditioner.HvacMode=auto: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=cool: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=coolClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dry: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=dryClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=fanOnly: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heat: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=heatClean: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		airconditioner.HvacMode=off: {auto, cool, coolClean, dry, dryClean, fanOnly, heat, heatClean, off};
+		TRUE: airconditioner.HvacMode;
+	esac;
+
+	next(alarm.AlertState) :=
+	case
+		weather.weather=windy & alarm.is_attack=FALSE: both;
+		alarm.AlertState=both: {both, off, siren, strobe};
+		alarm.AlertState=off: {both, off, siren, strobe};
+		alarm.AlertState=siren: {both, off, siren, strobe};
+		alarm.AlertState=strobe: {both, off, siren, strobe};
+		TRUE: alarm.AlertState;
+	esac;
+
+	next(a_airQuality) :=
+	case
+		a_airQuality=100: {toint(a_airQuality)-1, a_airQuality};
+		a_airQuality>100: {100};
+		a_airQuality=0: {a_airQuality, a_airQuality+1};
+		a_airQuality<0: {0};
+		TRUE: {a_airQuality+-1, a_airQuality, a_airQuality+1};
+	esac;
+
+	next(a_motion) :=
+	case
+		TRUE: {active, inactive};
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	next(a_weather) :=
+	case
+		TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+	esac;
+
+	next(a_temperature) :=
+	case
+		a_temperature=100-(airconditioner.temperature_rate): {toint(a_temperature)-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate};
+		a_temperature>100-(airconditioner.temperature_rate): {100};
+		a_temperature=0-(airconditioner.temperature_rate): {a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+		a_temperature<0-(airconditioner.temperature_rate): {0};
+		TRUE: {a_temperature+-1+airconditioner.temperature_rate, a_temperature+airconditioner.temperature_rate, a_temperature+1+airconditioner.temperature_rate};
+	esac;
+
+	next(a_humidity) :=
+	case
+		a_humidity=100-(airconditioner.humidity_rate): {toint(a_humidity)-1+airconditioner.humidity_rate, a_humidity+airconditioner.humidity_rate};
+		a_humidity>100-(airconditioner.humidity_rate): {100};
+		a_humidity=0-(airconditioner.humidity_rate): {a_humidity+airconditioner.humidity_rate, a_humidity+1+airconditioner.humidity_rate};
+		a_humidity<0-(airconditioner.humidity_rate): {0};
+		TRUE: {a_humidity+-1+airconditioner.humidity_rate, a_humidity+airconditioner.humidity_rate, a_humidity+1+airconditioner.humidity_rate};
+	esac;
+
+	next(a_carbonDioxide) :=
+	case
+		a_carbonDioxide=100: {toint(a_carbonDioxide)-1, a_carbonDioxide};
+		a_carbonDioxide>100: {100};
+		a_carbonDioxide=0: {a_carbonDioxide, a_carbonDioxide+1};
+		a_carbonDioxide<0: {0};
+		TRUE: {a_carbonDioxide+-1, a_carbonDioxide, a_carbonDioxide+1};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	next(email.receiveKey) :=
+	case
+		TRUE: {Key, others};
+	esac;
+
+	next(email.receiveMail) :=
+	case
+		TRUE: {idle, receive};
+	esac;
+
+	smokesensor.smoke:=
+	case
+		smokesensor.is_attack=TRUE: {clear, detected, tested};
+		TRUE: a_smoke;
+	esac;
+
+	humiditysensor.humidity:=
+	case
+		humiditysensor.is_attack=TRUE: 0..100;
+		TRUE: a_humidity;
+	esac;
+
+	next(dryer.dryerJobState) :=
+	case
+		TRUE: {cooling, delayWash, drying, finished, none, weightSensing, wrinklePrevent};
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	weather.weather:=
+	case
+		weather.is_attack=TRUE: {sunny, rainy, snowy, cloudy, windy, foggy, stormy};
+		TRUE: a_weather;
+	esac;
+
+	motiondetector.motion:=
+	case
+		motiondetector.is_attack=TRUE: {active, inactive};
+		TRUE: a_motion;
+	esac;
+
+	temperaturesensor.temperature:=
+	case
+		temperaturesensor.is_attack=TRUE: 0..100;
+		TRUE: a_temperature;
+	esac;
+
+	airqualitymonitor.airQuality:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_airQuality;
+	esac;
+
+	airqualitymonitor.carbonDioxide:=
+	case
+		airqualitymonitor.is_attack=TRUE: 0..100;
+		TRUE: a_carbonDioxide;
+	esac;
+
+	next(airconditioner.temperature_rate) :=
+	case
+		airconditioner.HvacMode=cool: -1;
+		airconditioner.HvacMode=coolClean: -1;
+		airconditioner.HvacMode=heat: 1;
+		airconditioner.HvacMode=heatClean: 1;
+		TRUE: 0;
+	esac;
+
+	next(airconditioner.humidity_rate) :=
+	case
+		airconditioner.HvacMode=dry: -1;
+		airconditioner.HvacMode=dryClean: -1;
+		airconditioner.HvacMode=heat: -1;
+		TRUE: 0;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(email.sendmail_a) :=
+	case
+		email.State=idle & next(email.State)=sending: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.regular_a) :=
+	case
+		dryer.DryerMode!=regular & next(dryer.DryerMode)=regular: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.lowHeat_a) :=
+	case
+		dryer.DryerMode!=lowHeat & next(dryer.DryerMode)=lowHeat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.highHeat_a) :=
+	case
+		dryer.DryerMode!=highHeat & next(dryer.DryerMode)=highHeat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.pause_a) :=
+	case
+		dryer.MachineState!=pause & next(dryer.MachineState)=pause: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.run_a) :=
+	case
+		dryer.MachineState!=run & next(dryer.MachineState)=run: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(dryer.stop_a) :=
+	case
+		dryer.MachineState!=stop & next(dryer.MachineState)=stop: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sethomemode_a) :=
+	case
+		homemode.Mode!=home & next(homemode.Mode)=home: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setawaymode_a) :=
+	case
+		homemode.Mode!=away & next(homemode.Mode)=away: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.setsleepmode_a) :=
+	case
+		homemode.Mode!=sleep & next(homemode.Mode)=sleep: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendalertmessage_a) :=
+	case
+		homemode.State!=sendingAlertMessage & next(homemode.State)=sendingAlertMessage: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(homemode.sendphoto_a) :=
+	case
+		homemode.State!=sendingPhoto & next(homemode.State)=sendingPhoto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.auto_a) :=
+	case
+		airconditioner.HvacMode!=auto & next(airconditioner.HvacMode)=auto: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.cool_a) :=
+	case
+		airconditioner.HvacMode!=cool & next(airconditioner.HvacMode)=cool: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dry_a) :=
+	case
+		airconditioner.HvacMode!=dry & next(airconditioner.HvacMode)=dry: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.coolClean_a) :=
+	case
+		airconditioner.HvacMode!=coolClean & next(airconditioner.HvacMode)=coolClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.dryClean_a) :=
+	case
+		airconditioner.HvacMode!=dryClean & next(airconditioner.HvacMode)=dryClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.fanOnly_a) :=
+	case
+		airconditioner.HvacMode!=fanOnly & next(airconditioner.HvacMode)=fanOnly: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heat_a) :=
+	case
+		airconditioner.HvacMode!=heat & next(airconditioner.HvacMode)=heat: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.heatClean_a) :=
+	case
+		airconditioner.HvacMode!=heatClean & next(airconditioner.HvacMode)=heatClean: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(airconditioner.off_a) :=
+	case
+		airconditioner.HvacMode!=off & next(airconditioner.HvacMode)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.both_a) :=
+	case
+		alarm.AlertState!=both & next(alarm.AlertState)=both: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.off_a) :=
+	case
+		alarm.AlertState!=off & next(alarm.AlertState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.siren_a) :=
+	case
+		alarm.AlertState!=siren & next(alarm.AlertState)=siren: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(alarm.strobe_a) :=
+	case
+		alarm.AlertState!=strobe & next(alarm.AlertState)=strobe: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		email.State=sending & (email.trust_State_sending=trusted): trusted;
+		email.State=sending: untrusted;
+		airqualitymonitor.carbonDioxide>70 & (airqualitymonitor.trust_carbonDioxide=trusted): trusted;
+		airqualitymonitor.carbonDioxide>70: untrusted;
+		dryer.MachineState=stop & (dryer.trust_MachineState_stop=trusted): trusted;
+		dryer.MachineState=stop: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(email.trust_State_idle) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		TRUE: email.trust_State_idle;
+	esac;
+
+	next(email.trust_State_sending) :=
+	case
+		email.is_attack=TRUE: untrusted;
+		airconditioner.HvacMode=cool & (airconditioner.trust_HvacMode_cool=trusted): trusted;
+		airconditioner.HvacMode=cool: untrusted;
+		motiondetector.motion=inactive & (motiondetector.trust_motion=trusted): trusted;
+		motiondetector.motion=inactive: untrusted;
+		homemode.Mode=away & (homemode.trust_Mode_away=trusted): trusted;
+		homemode.Mode=away: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		weather.weather=rainy & (weather.trust_weather=trusted): trusted;
+		weather.weather=rainy: untrusted;
+		alarm.AlertState=both & (alarm.trust_AlertState_both=trusted): trusted;
+		alarm.AlertState=both: untrusted;
+		temperaturesensor.temperature>30 & (temperaturesensor.trust_temperature=trusted): trusted;
+		temperaturesensor.temperature>30: untrusted;
+		TRUE: email.trust_State_sending;
+	esac;
+
+	next(dryer.trust_DryerMode_highHeat) := dryer.trust_DryerMode_highHeat;
+
+	next(dryer.trust_DryerMode_lowHeat) := dryer.trust_DryerMode_lowHeat;
+
+	next(dryer.trust_DryerMode_regular) := dryer.trust_DryerMode_regular;
+
+	next(dryer.trust_MachineState_pause) := dryer.trust_MachineState_pause;
+
+	next(dryer.trust_MachineState_run) := dryer.trust_MachineState_run;
+
+	next(dryer.trust_MachineState_stop) := dryer.trust_MachineState_stop;
+
+	next(homemode.trust_Mode_away) := homemode.trust_Mode_away;
+
+	next(homemode.trust_Mode_home) := homemode.trust_Mode_home;
+
+	next(homemode.trust_Mode_sleep) := homemode.trust_Mode_sleep;
+
+	next(homemode.trust_State_idle) := homemode.trust_State_idle;
+
+	next(homemode.trust_State_sendingAlertMessage) := homemode.trust_State_sendingAlertMessage;
+
+	next(homemode.trust_State_sendingPhoto) := homemode.trust_State_sendingPhoto;
+
+	next(airconditioner.trust_HvacMode_auto) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		humiditysensor.humidity>60 & (humiditysensor.trust_humidity=trusted): trusted;
+		humiditysensor.humidity>60: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: airconditioner.trust_HvacMode_auto;
+	esac;
+
+	next(airconditioner.trust_HvacMode_cool) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_cool;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dry) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dry;
+	esac;
+
+	next(airconditioner.trust_HvacMode_coolClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_coolClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_dryClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_dryClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_fanOnly) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_fanOnly;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heat) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heat;
+	esac;
+
+	next(airconditioner.trust_HvacMode_heatClean) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_heatClean;
+	esac;
+
+	next(airconditioner.trust_HvacMode_off) :=
+	case
+		airconditioner.is_attack=TRUE: untrusted;
+		TRUE: airconditioner.trust_HvacMode_off;
+	esac;
+
+	next(alarm.trust_AlertState_both) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		weather.weather=windy & (weather.trust_weather=trusted): trusted;
+		weather.weather=windy: untrusted;
+		TRUE: alarm.trust_AlertState_both;
+	esac;
+
+	next(alarm.trust_AlertState_off) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_off;
+	esac;
+
+	next(alarm.trust_AlertState_siren) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_siren;
+	esac;
+
+	next(alarm.trust_AlertState_strobe) :=
+	case
+		alarm.is_attack=TRUE: untrusted;
+		TRUE: alarm.trust_AlertState_strobe;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(sinaweibo.State=posting & sinaweibo.trust_State_posting=untrusted & intensity<=1 & sinaweibo.is_attack=FALSE);
+SPEC AG !(sinaweibo.privacy_content=private & intensity<=1);

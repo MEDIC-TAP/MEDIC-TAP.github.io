@@ -1,0 +1,233 @@
+--IF Smoke Sensor.smoke = detected THEN Sina Weibo.post
+--IF Sina Weibo.State = posting THEN Online Bank.transfer money
+--IF Clock.time = 20 THEN Water Heater.off
+
+MODULE SinaWeibo
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, posting};
+	post_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_posting: {untrusted, trusted};
+	privacy_content: {private, public};
+ASSIGN
+	init(State) := idle;
+	init(post_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_posting) := trusted;
+	init(privacy_content) := public;
+
+MODULE WaterHeater
+FROZENVAR
+	is_attack: boolean;
+VAR
+	MachineState: {off, on};
+	on_a: boolean;
+	off_a: boolean;
+	waterTemperature: 0..100;
+	waterTemperature_rate: -1..1;
+	trust_waterTemperature: {untrusted};
+	trust_MachineState_off: {untrusted, trusted};
+	trust_MachineState_on: {untrusted, trusted};
+ASSIGN
+	init(MachineState) := on;
+	init(on_a) := FALSE;
+	init(off_a) := FALSE;
+	init(trust_MachineState_off) := trusted;
+	init(trust_MachineState_on) := trusted;
+
+MODULE SmokeSensor
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_smoke: {untrusted, trusted};
+VAR
+	smoke: {clear, detected, tested};
+ASSIGN
+	init(trust_smoke):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE OnlineBank
+FROZENVAR
+	is_attack: boolean;
+VAR
+	State: {idle, transfering};
+	transfermoney_a: boolean;
+	trust_State_idle: {untrusted, trusted};
+	trust_State_transfering: {untrusted, trusted};
+ASSIGN
+	init(State) := idle;
+	init(transfermoney_a) := FALSE;
+	init(trust_State_idle) := trusted;
+	init(trust_State_transfering) := trusted;
+
+MODULE Clock
+FROZENVAR
+	is_attack: boolean;
+FROZENVAR
+	trust_time: {untrusted, trusted};
+VAR
+	time: 0..23;
+ASSIGN
+	init(trust_time):=
+	case
+		is_attack=TRUE: untrusted;
+		TRUE: trusted;
+	esac;
+
+MODULE main
+FROZENVAR
+	intensity: 0..50;
+VAR
+	sinaweibo: SinaWeibo;
+	waterheater: WaterHeater;
+	smokesensor: SmokeSensor;
+	onlinebank: OnlineBank;
+	clock: Clock;
+	a_smoke: {clear, detected, tested};
+	a_time: 0..23;
+ASSIGN
+	init(intensity) := 0 + toint(sinaweibo.is_attack) + toint(waterheater.is_attack) + toint(smokesensor.is_attack) + toint(onlinebank.is_attack) + toint(clock.is_attack);
+
+	next(sinaweibo.State) :=
+	case
+		smokesensor.smoke=detected & sinaweibo.is_attack=FALSE: posting;
+		sinaweibo.State=posting: idle;
+		sinaweibo.State=idle: {idle, posting};
+		sinaweibo.State=posting: {posting};
+		TRUE: sinaweibo.State;
+	esac;
+
+	next(waterheater.MachineState) :=
+	case
+		clock.time=20 & waterheater.is_attack=FALSE: off;
+		waterheater.MachineState=off: {off, on};
+		waterheater.MachineState=on: {off, on};
+		TRUE: waterheater.MachineState;
+	esac;
+
+	next(onlinebank.State) :=
+	case
+		sinaweibo.State=posting & onlinebank.is_attack=FALSE: transfering;
+		onlinebank.State=transfering: idle;
+		onlinebank.State=idle: {idle, transfering};
+		onlinebank.State=transfering: {transfering};
+		TRUE: onlinebank.State;
+	esac;
+
+	next(a_smoke) :=
+	case
+		TRUE: {clear, detected, tested};
+	esac;
+
+	next(a_time) :=
+	case
+		a_time=23: 0;
+		a_time>=23: 23;
+		TRUE: a_time+1;
+	esac;
+
+	next(waterheater.waterTemperature) :=
+	case
+		waterheater.waterTemperature=100-(waterheater.waterTemperature_rate): {toint(waterheater.waterTemperature)-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature>100-(waterheater.waterTemperature_rate): {100};
+		waterheater.waterTemperature=0-(waterheater.waterTemperature_rate): {waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+		waterheater.waterTemperature<0-(waterheater.waterTemperature_rate): {0};
+		TRUE: {waterheater.waterTemperature+-1+waterheater.waterTemperature_rate, waterheater.waterTemperature+waterheater.waterTemperature_rate, waterheater.waterTemperature+1+waterheater.waterTemperature_rate};
+	esac;
+
+	smokesensor.smoke:=
+	case
+		smokesensor.is_attack=TRUE: {clear, detected, tested};
+		TRUE: a_smoke;
+	esac;
+
+	clock.time:=
+	case
+		clock.is_attack=TRUE: 0..23;
+		TRUE: a_time;
+	esac;
+
+	next(waterheater.waterTemperature_rate) :=
+	case
+		waterheater.MachineState=on: 1;
+		TRUE: 0;
+	esac;
+
+	next(sinaweibo.post_a) :=
+	case
+		sinaweibo.State=idle & next(sinaweibo.State)=posting: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.on_a) :=
+	case
+		waterheater.MachineState!=on & next(waterheater.MachineState)=on: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(waterheater.off_a) :=
+	case
+		waterheater.MachineState!=off & next(waterheater.MachineState)=off: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(onlinebank.transfermoney_a) :=
+	case
+		onlinebank.State=idle & next(onlinebank.State)=transfering: TRUE;
+		TRUE: FALSE;
+	esac;
+
+	next(sinaweibo.trust_State_idle) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		TRUE: sinaweibo.trust_State_idle;
+	esac;
+
+	next(sinaweibo.trust_State_posting) :=
+	case
+		sinaweibo.is_attack=TRUE: untrusted;
+		smokesensor.smoke=detected & (smokesensor.trust_smoke=trusted): trusted;
+		smokesensor.smoke=detected: untrusted;
+		TRUE: sinaweibo.trust_State_posting;
+	esac;
+
+	next(waterheater.trust_MachineState_off) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		clock.time=20 & (clock.trust_time=trusted): trusted;
+		clock.time=20: untrusted;
+		TRUE: waterheater.trust_MachineState_off;
+	esac;
+
+	next(waterheater.trust_MachineState_on) :=
+	case
+		waterheater.is_attack=TRUE: untrusted;
+		TRUE: waterheater.trust_MachineState_on;
+	esac;
+
+	next(onlinebank.trust_State_idle) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		TRUE: onlinebank.trust_State_idle;
+	esac;
+
+	next(onlinebank.trust_State_transfering) :=
+	case
+		onlinebank.is_attack=TRUE: untrusted;
+		sinaweibo.State=posting & (sinaweibo.trust_State_posting=trusted): trusted;
+		sinaweibo.State=posting: untrusted;
+		TRUE: onlinebank.trust_State_transfering;
+	esac;
+
+	next(sinaweibo.privacy_content) :=
+	case
+		TRUE: sinaweibo.privacy_content;
+	esac;
+
+SPEC AG !(waterheater.MachineState=on & waterheater.trust_MachineState_on=untrusted & intensity<=1 & waterheater.is_attack=FALSE);
+SPEC AG !(onlinebank.State=transfering & onlinebank.trust_State_transfering=untrusted & intensity<=1 & onlinebank.is_attack=FALSE);

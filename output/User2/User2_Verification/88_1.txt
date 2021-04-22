@@ -1,0 +1,66 @@
+-- specification AG !(((window.WindowState = open & window.trust_WindowState_open = untrusted) & intensity <= 2) & window.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 1.1 <-
+  intensity = 1
+  weather.is_attack = TRUE
+  weather.trust_weather = untrusted
+  window.is_attack = FALSE
+  doorrfid.is_attack = FALSE
+  doorrfid.trust_RFID = trusted
+  door.is_attack = FALSE
+  weather.weather = sunny
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  doorrfid.RFID = authorized
+  door.LockState = locked
+  door.lock_a = FALSE
+  door.unlock_a = FALSE
+  door.trust_LockState_locked = trusted
+  door.trust_LockState_unlocked = trusted
+  a_weather = sunny
+  window.trust_contact = trusted
+-> State: 1.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  window.trust_WindowState_open = untrusted
+  door.LockState = unlocked
+  door.unlock_a = TRUE
+-- specification AG !(((door.LockState = unlocked & door.trust_LockState_unlocked = untrusted) & intensity <= 2) & door.is_attack = FALSE)  is false
+-- as demonstrated by the following execution sequence
+Trace Description: CTL Counterexample 
+Trace Type: Counterexample 
+-> State: 2.1 <-
+  intensity = 1
+  weather.is_attack = FALSE
+  weather.trust_weather = trusted
+  window.is_attack = FALSE
+  doorrfid.is_attack = TRUE
+  doorrfid.trust_RFID = untrusted
+  door.is_attack = FALSE
+  weather.weather = cloudy
+  window.WindowState = closed
+  window.close_a = FALSE
+  window.open_a = FALSE
+  window.contact = closed
+  window.trust_WindowState_closed = trusted
+  window.trust_WindowState_open = trusted
+  doorrfid.RFID = authorized
+  door.LockState = locked
+  door.lock_a = FALSE
+  door.unlock_a = FALSE
+  door.trust_LockState_locked = trusted
+  door.trust_LockState_unlocked = trusted
+  a_weather = cloudy
+  window.trust_contact = trusted
+-> State: 2.2 <-
+  window.WindowState = open
+  window.open_a = TRUE
+  door.LockState = unlocked
+  door.unlock_a = TRUE
+  door.trust_LockState_unlocked = untrusted

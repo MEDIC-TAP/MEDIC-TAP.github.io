@@ -1,0 +1,7 @@
+IF Temperature Sensor.temperature > 30 THEN Online Bank.transfer money
+IF Email.receiveMail = receive THEN Online Bank.transfer money
+IF Calendar.date = weekend THEN Camera.off
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Weather.weather = windy THEN Email.send mail
+IF Calendar.date = weekdays THEN Email.send mail
+IF Humidity Sensor.humidity > 60 THEN Humidifier.on

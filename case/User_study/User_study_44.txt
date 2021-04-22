@@ -1,0 +1,5 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Temperature Sensor.temperature > 35 THEN Air Conditioner.cool
+IF Soil Moisture Sensor.water = dry THEN Sprinkler Controller.open
+IF Air Quality Monitor.airQuality > 70 THEN Window.close
+IF Motion Detector.motion = active THEN Air Purifier.on

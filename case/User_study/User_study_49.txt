@@ -1,0 +1,5 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Humidity Sensor.humidity < 20 THEN Humidifier.on
+IF Temperature Sensor.temperature > 30 THEN Air Conditioner.cool
+IF Humidity Sensor.humidity > 60 THEN Humidifier.off
+IF Motion Detector.motion = active & Illuminance Sensor.illuminance < 30 THEN Light.on

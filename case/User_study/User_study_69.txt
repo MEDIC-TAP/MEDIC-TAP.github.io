@@ -1,0 +1,10 @@
+IF Door RFID.RFID = authorized THEN Door.unlock
+IF Air Quality Monitor.airQuality > 20 THEN Window.close
+IF Door RFID.RFID = not authorized THEN Camera.take photo
+IF Door RFID.RFID = not authorized THEN Home Mode.send alert message
+IF Motion Detector.motion = active THEN Light.on
+IF Door.LockState = unlocked THEN TV.on
+IF Door.LockState = unlocked THEN Coffee Maker.on
+IF Camera.off THEN Door.unlock
+IF Illuminance Sensor.illuminance < 9 THEN Door.lock
+IF Smoke Sensor.smoke = detected THEN Window.open

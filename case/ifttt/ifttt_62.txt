@@ -1,0 +1,29 @@
+IF Smoke Sensor.smoke = detected THEN Light.on
+IF Clock.time = 20 THEN Camera.take photo
+IF Email.State = sending THEN Sina Weibo.post
+IF Car.location = garage THEN Sina Weibo.post
+IF Clock.time = 20 THEN Sina Weibo.post
+IF Mobile Phone.location = away THEN Air Conditioner.off
+IF Home Mode.Mode = away THEN Light.on
+IF Clock.time = 19 THEN Email.send mail
+IF Door.LockState = locked THEN Email.send mail
+IF Clock.time = 6 THEN Sina Weibo.post
+IF Car.location = away THEN Garage Door.close
+IF Temperature Sensor.temperature < 10 THEN Online Bank.transfer money
+IF Car.location = garage THEN Email.send mail
+IF Clock.time = 20 THEN Sprinkler Controller.open
+IF Email.State = sending THEN Light.on
+IF Motion Detector.motion = active THEN Light.off
+IF Humidity Sensor.humidity > 60 THEN Light.off
+IF Weather.weather = rainy THEN Sina Weibo.post
+IF Motion Detector.motion = active THEN Sprinkler Controller.close
+IF Temperature Sensor.temperature > 30 THEN Sina Weibo.post
+IF Clock.time = 20 THEN Door.lock
+IF Mobile Phone.location = home THEN Sprinkler Controller.open
+IF Temperature Sensor.temperature > 30 THEN Light.on
+IF Temperature Sensor.temperature > 30 THEN Light.off
+IF Temperature Sensor.temperature > 30 THEN Thermostat.off
+IF Motion Detector.motion = active THEN Alarm.both
+IF Air Quality Monitor.airQuality > 70 THEN Sina Weibo.post
+IF Mobile Phone.location = home THEN Garage Door.open
+IF Air Quality Monitor.carbonDioxide > 70 THEN Ventilator.on

@@ -1,0 +1,10 @@
+IF Temperature Sensor.temperature > 28 THEN Air Conditioner.cool
+IF Temperature Sensor.temperature < 20 THEN Air Conditioner.off
+IF Temperature Sensor.temperature < 5 THEN Air Conditioner.heat
+IF Temperature Sensor.temperature > 16 THEN Air Conditioner.off
+IF Illuminance Sensor.illuminance > 20 THEN Light.off
+IF Weather.weather = rainy THEN Window.close
+IF Weather.weather = snowy THEN Window.close
+IF Weather.weather = windy THEN Window.close
+IF Weather.weather = foggy THEN Window.close
+IF Weather.weather = sunny THEN Window.open
