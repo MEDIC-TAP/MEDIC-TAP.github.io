@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="img/favicon.ico">
-        <title>Welcome - My Tool</title>
+        <title>Home - MEDIC</title>
         <link href="css/bootstrap.min.css" rel="stylesheet">
         <link href="css/font-awesome.min.css" rel="stylesheet">
         <link href="css/base.css" rel="stylesheet">
@@ -23,7 +23,7 @@
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href=".">My Tool</a>
+                <a class="navbar-brand" href=".">MEDIC</a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -34,7 +34,7 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li class="navitem active">
-                                <a href="index.html" class="nav-link">Welcome</a>
+                                <a href="index.html" class="nav-link">Home</a>
                             </li>
                             <li class="navitem">
                                 <a href="table.html" class="nav-link">Results</a>
@@ -75,9 +75,9 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="1"><a href="#welcome" class="nav-link">Welcome</a>
+            <li class="nav-item" data-level="1"><a href="#home" class="nav-link">Home</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#download" class="nav-link">Download</a>
+            <li class="nav-item" data-level="2"><a href="#downloads" class="nav-link">Downloads</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -88,12 +88,14 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="welcome">Welcome</h1>
-<h2 id="download">Download</h2>
+<h1 id="home">Home</h1>
+<p>Internet of Things (IoT) has become prevalent in various fields, especially in the context of home automation (HA). To better control HA-IoT devices, especially to integrate several devices for rich smart functionalities, trigger-action programming, such as the If This Then That (IFTTT), has become a popular paradigm. Leveraging it, novice users can easily specify their intent in applets regarding how to control a device/service through another once a specific condition is met. Nevertheless, the users may design IFTTT-style integrations inappropriately, due to lack of security experience or unawareness of the security impact of cyber-attacks against individual devices. This has caused financial loss, privacy leakage, unauthorized access and other security issues. </p>
+<p>To address these problems, MEDIC models smart home integrations and check their security. MEDIC is implemented in JAVA. It takes the userdefined rules as inputs. The models can be automatically created for the entire IoT system, including the sensors, devices, environment variables, user actions and attacks. The model and specification generation module reads the JSON file of the device schema and takes the rules authored by the user to build FSM models. The specifications that ensure the security of the security sensitive events can be also automatically generated and then checked. The model and specification are then fed into <a href="https://nusmv.fbk.eu/index.html">NuSMV</a>, a state-of-art formal verification tool, to conduct the verification.</p>
+<h2 id="downloads">Downloads</h2>
 <ul>
-<li><a href="download/newRuleToSMVModel.zip">tool</a></li>
-<li><a href="download/case.zip">case</a></li>
-<li><a href="download/output.zip">output</a></li>
+<li><a href="download/newRuleToSMVModel.zip">MEDIC</a></li>
+<li><a href="download/case.zip">cases</a></li>
+<li><a href="download/output.zip">outputs</a></li>
 </ul></div>
             </div>
         </div>
